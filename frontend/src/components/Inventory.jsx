@@ -6,17 +6,37 @@ import moment from 'moment';
 class Inventory extends Component {
   constructor(props) {
     super(props);
-    this.state = { loading: true };
+    this.state = {
+      loading: true,
+      newItemName: '',
+      newItemAddDate: moment(Date.now()).format('M-D-YYYY'),
+      newItemShelflife: '',
+    };
 
     this.showItemDishes = this.showItemDishes.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.saveItem = this.saveItem.bind(this);
   }
 
   componentDidMount() {
-    fetch('/api/inventory')
-      .then((res) => res.json())
-      .then((inventoryItems) => {
-        this.setState({ inventoryItems, loading: false });
-      });
+    this.fetchData();
+  }
+
+  fetchData() {
+    const fetches = [
+      fetch('/api/inventory')
+        .then((res) => res.json())
+        .then((inventoryItems) => {
+          this.setState({ inventoryItems });
+        }),
+      fetch('/api/items')
+        .then((res) => res.json())
+        .then((items) => {
+          this.setState({ items });
+        }),
+    ];
+
+    Promise.all(fetches).then(() => this.setState({ loading: false }));
   }
 
   showItemDishes(event) {
@@ -26,8 +46,35 @@ class Inventory extends Component {
     this.setState({ selectedItem });
   }
 
+  handleChange(event) {
+    const { value, name, type } = event.target;
+    const val = type === 'number' ? parseFloat(value) || '' : value;
+    this.setState({ [name]: val });
+  }
+
+  saveItem(event) {
+    event.preventDefault();
+    fetch('/api/inventory/saveitem', {
+      method: 'POST',
+      body: JSON.stringify(this.state),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) =>
+      res.json().then((resJSON) => {
+        console.log(resJSON);
+        if (res.ok) {
+          this.fetchData();
+          this.setState({
+            newItemName: '',
+            newItemAddDate: moment(Date.now()).format('M-DD-YYYY'),
+            newItemShelflife: '',
+          });
+        }
+      })
+    );
+  }
+
   render() {
-    const { inventoryItems, selectedItem } = this.state;
+    const { inventoryItems, selectedItem, newItemName, newItemAddDate, newItemShelflife } = this.state;
 
     if (this.state.loading) return <div>Loading...</div>;
 
@@ -63,8 +110,22 @@ class Inventory extends Component {
               <h3>Add Item</h3>
               <label htmlFor="name">
                 Name
-                <input type="text" name="name" />
+                <input type="text" name="newItemName" value={newItemName} onChange={this.handleChange} />
               </label>
+
+              <label htmlFor="addDate">
+                Add date
+                <input type="text" name="newItemAddDate" value={newItemAddDate} onChange={this.handleChange} />
+              </label>
+
+              <label htmlFor="shelflife">
+                Shelflife (days)
+                <input type="number" name="newItemShelflife" value={newItemShelflife} onChange={this.handleChange} />
+              </label>
+
+              <button type="submit" onClick={this.saveItem}>
+                Save
+              </button>
             </form>
           </div>
 
@@ -100,6 +161,10 @@ const StyledInventory = styled.div`
       display: grid;
       grid-template-columns: repeat(3, 1fr);
     }
+  }
+
+  label {
+    display: block;
   }
 `;
 

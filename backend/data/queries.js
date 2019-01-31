@@ -1,5 +1,7 @@
 const db = require('../db');
 
+const getItems = () => db('item').select();
+
 const getNakedInventoryItem = (id) =>
   db('inventory_item')
     .select('inventory_item.*', 'item.name')
@@ -28,4 +30,34 @@ const getInventory = () =>
     .select('id')
     .then((ids) => Promise.all(ids.map((id) => getInventoryItem(id.id))));
 
-module.exports = { getInventory };
+const saveInventoryItem = (data) => {
+  const itemNames = data.items.map((item) => item.name);
+  if (itemNames.includes(data.newItemName)) {
+    const existingItem = data.items.filter(
+      (item) => item.name === data.newItemName
+    )[0];
+
+    db('inventory_item')
+      .insert({
+        item_id: existingItem.id,
+        add_date: data.newItemAddDate,
+        shelflife: data.newItemShelflife,
+      })
+      .returning('id');
+  }
+
+  return db('item')
+    .insert({ name: data.newItemName })
+    .returning('id')
+    .then((itemIDs) =>
+      db('inventory_item')
+        .insert({
+          item_id: itemIDs[0],
+          add_date: data.newItemAddDate,
+          shelflife: data.newItemShelflife,
+        })
+        .returning('id')
+    );
+};
+
+module.exports = { getItems, getInventory, saveInventoryItem };
