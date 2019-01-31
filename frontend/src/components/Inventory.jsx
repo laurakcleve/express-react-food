@@ -173,7 +173,7 @@ const StyledInventory = styled.div`
     grid-template-columns: 4fr 2fr;
   }
 
-  ul {
+  .item-list ul {
     list-style-type: none;
 
     li {
