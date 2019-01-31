@@ -20,3 +20,10 @@ exports.saveInventoryItem = (req, res) => {
     .then((inventory) => res.json(inventory))
     .catch((error) => res.status(500).json({ error }));
 };
+
+exports.deleteInventoryItem = (req, res) => {
+  queries
+    .deleteInventoryItem(req.body)
+    .then((item) => res.json(item))
+    .catch((error) => res.status(500).json({ error }));
+};

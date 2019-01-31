@@ -60,4 +60,14 @@ const saveInventoryItem = (data) => {
     );
 };
 
-module.exports = { getItems, getInventory, saveInventoryItem };
+const deleteInventoryItem = (data) =>
+  db('inventory_item')
+    .del()
+    .where('id', data.itemID);
+
+module.exports = {
+  getItems,
+  getInventory,
+  saveInventoryItem,
+  deleteInventoryItem,
+};

@@ -16,6 +16,7 @@ class Inventory extends Component {
     this.showItemDishes = this.showItemDishes.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.saveItem = this.saveItem.bind(this);
+    this.deleteItem = this.deleteItem.bind(this);
   }
 
   componentDidMount() {
@@ -37,6 +38,22 @@ class Inventory extends Component {
     ];
 
     Promise.all(fetches).then(() => this.setState({ loading: false }));
+  }
+
+  deleteItem(event) {
+    const { id } = event.target.dataset;
+    fetch('/api/inventory/deleteitem', {
+      method: 'POST',
+      body: JSON.stringify({ itemID: parseInt(id, 10) }),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) =>
+      res.json().then((resJSON) => {
+        console.log(resJSON);
+        if (res.ok) {
+          this.fetchData();
+        }
+      })
+    );
   }
 
   showItemDishes(event) {
@@ -101,7 +118,9 @@ class Inventory extends Component {
                       .fromNow()}
                   </span>
 
-                  <button>Remove</button>
+                  <button data-id={item.id} onClick={this.deleteItem}>
+                    Remove
+                  </button>
                 </li>
               ))}
             </ul>
