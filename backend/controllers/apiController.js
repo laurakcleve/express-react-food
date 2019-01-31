@@ -27,3 +27,17 @@ exports.deleteInventoryItem = (req, res) => {
     .then((item) => res.json(item))
     .catch((error) => res.status(500).json({ error }));
 };
+
+exports.getDishes = (req, res) => {
+  queries
+    .getDishes()
+    .then((dishes) => res.json(dishes))
+    .catch((error) => res.status(500).json({ error }));
+};
+
+exports.saveDish = (req, res) => {
+  queries
+    .saveDish(req.body)
+    .then((dish) => res.json(dish))
+    .catch((error) => res.status(500).json({ error }));
+};

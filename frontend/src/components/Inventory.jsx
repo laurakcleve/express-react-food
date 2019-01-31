@@ -91,9 +91,9 @@ class Inventory extends Component {
   }
 
   render() {
-    const { inventoryItems, selectedItem, newItemName, newItemAddDate, newItemShelflife } = this.state;
+    const { loading, inventoryItems, selectedItem, newItemName, newItemAddDate, newItemShelflife } = this.state;
 
-    if (this.state.loading) return <div>Loading...</div>;
+    if (loading) return <div>Loading...</div>;
 
     return (
       <StyledInventory>
