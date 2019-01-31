@@ -16,4 +16,5 @@ const StyledHeader = styled.header`
     margin-right: 1rem;
   }
 `;
+
 export default Header;

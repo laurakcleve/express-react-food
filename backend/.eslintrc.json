@@ -1,0 +1,25 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": [
+    "airbnb",
+    "plugin:prettier/recommended"
+  ],
+  "rules": {
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "prettier/prettier": [
+      "warn",
+      {
+        "trailingComma": "es5",
+        "singleQuote": true,
+        "arrowParens": "always"
+      }
+    ]
+  }
+}
