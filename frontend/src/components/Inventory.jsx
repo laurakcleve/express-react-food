@@ -28,7 +28,16 @@ class Inventory extends Component {
       fetch('/api/inventory')
         .then((res) => res.json())
         .then((inventoryItems) => {
-          this.setState({ inventoryItems });
+          const sortedItems = [].concat(inventoryItems).sort(
+            (a, b) =>
+              moment(a.add_date)
+                .add(a.shelflife, 'days')
+                .valueOf() -
+              moment(b.add_date)
+                .add(b.shelflife, 'days')
+                .valueOf()
+          );
+          this.setState({ inventoryItems: sortedItems });
         }),
       fetch('/api/items')
         .then((res) => res.json())
