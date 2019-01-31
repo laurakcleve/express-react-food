@@ -83,6 +83,7 @@ class Inventory extends Component {
           this.setState({
             newItemName: '',
             newItemAddDate: moment(Date.now()).format('M-DD-YYYY'),
+            newItemAmount: '',
             newItemShelflife: '',
           });
         }
@@ -91,7 +92,16 @@ class Inventory extends Component {
   }
 
   render() {
-    const { loading, inventoryItems, selectedItem, newItemName, newItemAddDate, newItemShelflife } = this.state;
+    const {
+      loading,
+      items,
+      inventoryItems,
+      selectedItem,
+      newItemName,
+      newItemAddDate,
+      newItemAmount,
+      newItemShelflife,
+    } = this.state;
 
     if (loading) return <div>Loading...</div>;
 
@@ -103,6 +113,7 @@ class Inventory extends Component {
             <ul>
               <li>
                 <span>Name</span>
+                <span>Amount</span>
                 <span>Expires</span>
               </li>
 
@@ -111,6 +122,8 @@ class Inventory extends Component {
                   <button data-id={item.id} onClick={this.showItemDishes}>
                     {item.name}
                   </button>
+
+                  <span>{item.amount}</span>
 
                   <span>
                     {moment(item.add_date)
@@ -127,17 +140,33 @@ class Inventory extends Component {
 
             <form>
               <h3>Add Item</h3>
-              <label htmlFor="name">
+              <label htmlFor="newItemName">
                 Name
-                <input type="text" name="newItemName" value={newItemName} onChange={this.handleChange} />
+                <input
+                  type="text"
+                  name="newItemName"
+                  value={newItemName}
+                  onChange={this.handleChange}
+                  list="itemList"
+                />
+                <datalist id="itemList">
+                  {items.map((item) => (
+                    <option key={item.id}>{item.name}</option>
+                  ))}
+                </datalist>
               </label>
 
-              <label htmlFor="addDate">
+              <label htmlFor="newItemAddDate">
                 Add date
                 <input type="text" name="newItemAddDate" value={newItemAddDate} onChange={this.handleChange} />
               </label>
 
-              <label htmlFor="shelflife">
+              <label htmlFor="newItemAmount">
+                Amount
+                <input type="text" name="newItemAmount" value={newItemAmount} onChange={this.handleChange} />
+              </label>
+
+              <label htmlFor="newItemShelflife">
                 Shelflife (days)
                 <input type="number" name="newItemShelflife" value={newItemShelflife} onChange={this.handleChange} />
               </label>
@@ -178,7 +207,7 @@ const StyledInventory = styled.div`
 
     li {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
     }
   }
 

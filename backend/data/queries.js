@@ -41,6 +41,7 @@ const saveInventoryItem = (data) => {
       .insert({
         item_id: existingItem.id,
         add_date: data.newItemAddDate,
+        amount: data.newItemAmount,
         shelflife: data.newItemShelflife,
       })
       .returning('id');
@@ -54,6 +55,7 @@ const saveInventoryItem = (data) => {
         .insert({
           item_id: itemIDs[0],
           add_date: data.newItemAddDate,
+          amount: data.newItemAmount,
           shelflife: data.newItemShelflife,
         })
         .returning('id')

@@ -83,7 +83,7 @@ class Dishes extends Component {
   }
 
   render() {
-    const { loading, dishes, selectedDish, newDishName, newDishItems } = this.state;
+    const { loading, items, dishes, selectedDish, newDishName, newDishItems } = this.state;
 
     if (loading) return <div>Loading...</div>;
 
@@ -107,9 +107,21 @@ class Dishes extends Component {
                 <input type="text" name="newDishName" value={newDishName} onChange={this.handleDishNameChange} />
               </label>
 
-              {newDishItems.map((item, index) => (
-                <div key={item.key}>
-                  <input type="text" value={item.name} data-index={index} onChange={this.handleItemNameChange} />
+              {newDishItems.map((newDishItem, index) => (
+                <div key={newDishItem.key}>
+                  <input
+                    type="text"
+                    value={newDishItem.name}
+                    data-index={index}
+                    onChange={this.handleItemNameChange}
+                    list={`${newDishItem.key}List`}
+                  />
+
+                  <datalist id={`${newDishItem.key}List`}>
+                    {items.map((item) => (
+                      <option key={item.id}>{item.name}</option>
+                    ))}
+                  </datalist>
                 </div>
               ))}
 
