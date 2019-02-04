@@ -40,9 +40,9 @@ const saveInventoryItem = (data) => {
     return db('inventory_item')
       .insert({
         item_id: existingItem.id,
-        add_date: data.newItemAddDate,
+        add_date: data.newItemAddDate || null,
         amount: data.newItemAmount,
-        shelflife: data.newItemShelflife,
+        shelflife: data.newItemShelflife || null,
       })
       .returning('id');
   }
@@ -54,9 +54,9 @@ const saveInventoryItem = (data) => {
       db('inventory_item')
         .insert({
           item_id: itemIDs[0],
-          add_date: data.newItemAddDate,
+          add_date: data.newItemAddDate || null,
           amount: data.newItemAmount,
-          shelflife: data.newItemShelflife,
+          shelflife: data.newItemShelflife || null,
         })
         .returning('id')
     );
