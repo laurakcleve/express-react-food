@@ -21,10 +21,24 @@ exports.saveInventoryItem = (req, res) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+exports.editInventoryItem = (req, res) => {
+  queries
+    .editInventoryItem(req.body)
+    .then((inventory) => res.json(inventory))
+    .catch((error) => res.status(500).json({ error }));
+};
+
 exports.deleteInventoryItem = (req, res) => {
   queries
     .deleteInventoryItem(req.body)
     .then((item) => res.json(item))
+    .catch((error) => res.status(500).json({ error }));
+};
+
+exports.getItemLocations = (req, res) => {
+  queries
+    .getItemLocations()
+    .then((itemLocations) => res.json(itemLocations))
     .catch((error) => res.status(500).json({ error }));
 };
 

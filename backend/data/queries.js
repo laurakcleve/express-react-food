@@ -1,14 +1,74 @@
 const db = require('../db');
 
+//
+//   ITEM CHECK
+//----------------------------------------------------------------------------------
+const itemCheck = (items, itemName) => {
+  const itemNames = items.map((item) => item.name);
+  if (itemNames.includes(itemName)) {
+    const existingItem = items.filter((item) => item.name === itemName)[0];
+    return Promise.resolve(existingItem.id);
+  }
+
+  return db('item')
+    .insert({ name: itemName })
+    .returning('id')
+    .then((newItemIDs) => Promise.resolve(newItemIDs[0]));
+};
+
+//
+//   ITEM LOCATION CHECK
+//----------------------------------------------------------------------------------
+const itemLocationCheck = (itemLocations, itemLocationName) => {
+  if (!itemLocationName) {
+    return Promise.resolve(-1);
+  }
+
+  const itemLocationNames = itemLocations.map(
+    (itemLocation) => itemLocation.name
+  );
+
+  if (itemLocationNames.includes(itemLocationName)) {
+    const existingItemLocation = itemLocations.filter(
+      (itemLocation) => itemLocation.name === itemLocationName
+    )[0];
+    return Promise.resolve(existingItemLocation.id);
+  }
+
+  return db('inventory_item_location')
+    .insert({ name: itemLocationName })
+    .returning('id')
+    .then((newItemLocationIDs) => Promise.resolve(newItemLocationIDs[0]));
+};
+
+//
+//   GET ITEMS
+//----------------------------------------------------------------------------------
 const getItems = () => db('item').select();
 
+//
+// GET NAKED INVENTORY ITEM
+//----------------------------------------------------------------------------------
 const getNakedInventoryItem = (id) =>
   db('inventory_item')
-    .select('inventory_item.*', 'item.name')
+    .select('inventory_item.*', 'item.name', 'iil.name as location')
     .innerJoin('item', 'item.id', 'inventory_item.item_id')
+    .leftJoin(
+      { iihl: 'inventory_item_has_location' },
+      'iihl.inventory_item_id',
+      'inventory_item.id'
+    )
+    .leftJoin(
+      { iil: 'inventory_item_location' },
+      'iil.id',
+      'iihl.inventory_item_location_id'
+    )
     .where('inventory_item.id', id)
     .first();
 
+//
+//   GET INVENTORY ITEM DISHES
+//----------------------------------------------------------------------------------
 const getInventoryItemDishes = (id) =>
   db('inventory_item')
     .select('dish.id', 'dish.name')
@@ -17,6 +77,9 @@ const getInventoryItemDishes = (id) =>
     .innerJoin('dish', 'dish.id', 'dish_item.dish_id')
     .where('inventory_item.id', id);
 
+//
+//   GET INVENTORY ITEM
+//----------------------------------------------------------------------------------
 const getInventoryItem = (id) =>
   Promise.all([getNakedInventoryItem(id), getInventoryItemDishes(id)]).then(
     (inventoryItem) => ({
@@ -25,54 +88,104 @@ const getInventoryItem = (id) =>
     })
   );
 
+//
+//   GET INVENTORY
+//----------------------------------------------------------------------------------
 const getInventory = () =>
   db('inventory_item')
     .select('id')
     .then((ids) => Promise.all(ids.map((id) => getInventoryItem(id.id))));
 
-const saveInventoryItem = (data) => {
-  const itemNames = data.items.map((item) => item.name);
-  if (itemNames.includes(data.newItemName)) {
-    const existingItem = data.items.filter(
-      (item) => item.name === data.newItemName
-    )[0];
-
-    return db('inventory_item')
+//
+//   SAVE INVENTORY ITEM
+//----------------------------------------------------------------------------------
+const saveInventoryItem = (data) =>
+  Promise.all([
+    itemCheck(data.items, data.newItemName),
+    itemLocationCheck(data.itemLocations, data.newItemLocation),
+  ]).then((results) =>
+    db('inventory_item')
       .insert({
-        item_id: existingItem.id,
+        item_id: results[0],
         add_date: data.newItemAddDate || null,
         amount: data.newItemAmount,
-        shelflife: data.newItemShelflife || null,
+        expiration: data.newItemExpiration || null,
       })
-      .returning('id');
-  }
+      .returning('id')
+      .then((newInventoryItemIDs) => {
+        if (results[1] === -1) {
+          return Promise.resolve();
+        }
 
-  return db('item')
-    .insert({ name: data.newItemName })
-    .returning('id')
-    .then((itemIDs) =>
+        return db('inventory_item_has_location').insert({
+          inventory_item_id: newInventoryItemIDs[0],
+          inventory_item_location_id: results[1],
+        });
+      })
+  );
+
+//
+//   EDIT INVENTORY ITEM
+//----------------------------------------------------------------------------------
+const editInventoryItem = (data) =>
+  Promise.all([
+    itemCheck(data.items, data.editItemName),
+    itemLocationCheck(data.itemLocations, data.editItemLocation),
+  ]).then((results) =>
+    Promise.all([
       db('inventory_item')
-        .insert({
-          item_id: itemIDs[0],
-          add_date: data.newItemAddDate || null,
-          amount: data.newItemAmount,
-          shelflife: data.newItemShelflife || null,
+        .update({
+          item_id: results[0],
+          add_date: data.editItemAddDate || null,
+          amount: data.editItemAmount,
+          expiration: data.editItemExpiration,
         })
-        .returning('id')
-    );
-};
+        .where('id', data.editItemID),
+      db('inventory_item_has_location')
+        .select()
+        .where('inventory_item_id', data.editItemID)
+        .then((rows) => {
+          if (results[1] === -1) return Promise.resolve();
+          if (rows.length) {
+            return db('inventory_item_has_location')
+              .update({
+                inventory_item_location_id: results[1],
+              })
+              .where('inventory_item_id', data.editItemID);
+          }
+          return db('inventory_item_has_location').insert({
+            inventory_item_id: data.editItemID,
+            inventory_item_location_id: results[1],
+          });
+        }),
+    ])
+  );
 
+//
+//   DELETE INVENTORY ITEM
+//----------------------------------------------------------------------------------
 const deleteInventoryItem = (data) =>
   db('inventory_item')
     .del()
     .where('id', data.itemID);
 
+//
+//   GET ITEM LOCATIONS
+//----------------------------------------------------------------------------------
+const getItemLocations = () => db('inventory_item_location').select();
+
+//
+//   GET NAKED DISH
+//----------------------------------------------------------------------------------
 const getNakedDish = (id) =>
   db('dish')
     .select()
     .where('id', id)
     .first();
 
+//
+//   GET DISH ITEMS
+//----------------------------------------------------------------------------------
 const getDishItems = (id) =>
   db('dish')
     .select('item.id', 'item.name')
@@ -80,6 +193,9 @@ const getDishItems = (id) =>
     .innerJoin('item', 'item.id', 'dish_item.item_id')
     .where('dish.id', id);
 
+//
+//   GET DISH
+//----------------------------------------------------------------------------------
 const getDish = (id) =>
   Promise.all([getNakedDish(id), getDishItems(id)]).then(
     (dish) =>
@@ -89,11 +205,15 @@ const getDish = (id) =>
       }
   );
 
+//   GET DISHES
+//----------------------------------------------------------------------------------
 const getDishes = () =>
   db('dish')
     .select('id')
     .then((ids) => Promise.all(ids.map((id) => getDish(id.id))));
 
+//   SAVE DISH
+//----------------------------------------------------------------------------------
 const saveDish = (data) =>
   db('dish')
     .insert({ name: data.newDishName })
@@ -132,7 +252,9 @@ module.exports = {
   getItems,
   getInventory,
   saveInventoryItem,
+  editInventoryItem,
   deleteInventoryItem,
+  getItemLocations,
   getDishes,
   saveDish,
 };
