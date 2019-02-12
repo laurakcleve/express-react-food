@@ -14,6 +14,7 @@ class Inventory extends Component {
     };
 
     this.showItemDishes = this.showItemDishes.bind(this);
+    this.handleSort = this.handleSort.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.saveItem = this.saveItem.bind(this);
     this.editItem = this.editItem.bind(this);
@@ -31,15 +32,9 @@ class Inventory extends Component {
       fetch('/api/inventory')
         .then((res) => res.json())
         .then((inventoryItems) => {
-          const sortedItems = [].concat(inventoryItems).sort(
-            (a, b) =>
-              moment(a.add_date)
-                .add(a.shelflife, 'days')
-                .valueOf() -
-              moment(b.add_date)
-                .add(b.shelflife, 'days')
-                .valueOf()
-          );
+          const sortedItems = []
+            .concat(inventoryItems)
+            .sort((a, b) => moment(a.expiration).valueOf() - moment(b.expiration).valueOf());
           this.setState({ inventoryItems: sortedItems });
         }),
 
@@ -59,8 +54,56 @@ class Inventory extends Component {
     Promise.all(fetches).then(() => this.setState({ loading: false }));
   }
 
+  handleSort(event) {
+    const { category } = event.target.dataset;
+    const { inventoryItems, sortBy } = this.state;
+    let sortedItems;
+    let newSortBy;
+
+    if (category === 'name') {
+      if (sortBy === 'name') {
+        sortedItems = [].concat(inventoryItems).reverse();
+      } else {
+        sortedItems = [].concat(inventoryItems).sort((a, b) => {
+          if (a.name < b.name) return -1;
+          if (a.name > b.name) return 1;
+          return 0;
+        });
+      }
+      newSortBy = 'name';
+    }
+
+    if (category === 'location') {
+      if (sortBy === 'location') {
+        sortedItems = [].concat(inventoryItems).reverse();
+      } else {
+        sortedItems = [].concat(inventoryItems).sort((a, b) => {
+          if (a.location < b.location) return -1;
+          if (a.location > b.location) return 1;
+          return 0;
+        });
+      }
+      newSortBy = 'location';
+    }
+
+    if (category === 'expiration') {
+      if (sortBy === 'expiration') {
+        sortedItems = [].concat(inventoryItems).reverse();
+      } else {
+        sortedItems = [].concat(inventoryItems).sort((a, b) => {
+          if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) return -1;
+          if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) return 1;
+          return 0;
+        });
+      }
+      newSortBy = 'expiration';
+    }
+
+    this.setState({ inventoryItems: sortedItems, sortBy: newSortBy });
+  }
+
   editItem(event) {
-    const { id, name, addDate, amount, shelflife } = event.target.dataset;
+    const { id, name, addDate, amount, location, expiration } = event.target.dataset;
 
     const editItemAddDate = addDate ? moment(addDate).format('MMM D YYYY') : '';
 
@@ -69,7 +112,8 @@ class Inventory extends Component {
       editItemName: name,
       editItemAddDate,
       editItemAmount: amount,
-      editItemDaysLeft: shelflife,
+      editItemLocation: location,
+      editItemDaysLeft: moment(expiration).diff(moment(), 'days'),
     });
   }
 
@@ -183,20 +227,18 @@ class Inventory extends Component {
       method: 'POST',
       body: JSON.stringify(saveData),
       headers: { 'Content-Type': 'application/json' },
-    }).then((res) =>
-      res.json().then((resJSON) => {
-        if (res.ok) {
-          this.fetchData();
-          this.setState({
-            newItemName: '',
-            newItemAddDate: moment(Date.now()).format('M-DD-YYYY'),
-            newItemAmount: '',
-            newItemLocation: '',
-            newItemDaysLeft: '',
-          });
-        }
-      })
-    );
+    }).then((res) => {
+      if (res.ok) {
+        this.fetchData();
+        this.setState({
+          newItemName: '',
+          newItemAddDate: moment(Date.now()).format('M-DD-YYYY'),
+          newItemAmount: '',
+          newItemLocation: '',
+          newItemDaysLeft: '',
+        });
+      }
+    });
   }
 
   render() {
@@ -228,10 +270,16 @@ class Inventory extends Component {
           <div className="item-list">
             <ul>
               <li>
-                <span>Name</span>
-                <span>Location</span>
+                <button onClick={this.handleSort} data-category="name">
+                  Name
+                </button>
+                <button onClick={this.handleSort} data-category="location">
+                  Location
+                </button>
+                <button onClick={this.handleSort} data-category="expiration">
+                  Expires
+                </button>
                 <span>Amount</span>
-                <span>Expires</span>
               </li>
 
               {inventoryItems.map((inventoryItem) => (
@@ -242,20 +290,17 @@ class Inventory extends Component {
 
                   <span>{inventoryItem.location}</span>
 
-                  <span>{inventoryItem.amount}</span>
+                  <span>{moment(inventoryItem.expiration).fromNow()}</span>
 
-                  <span>
-                    {moment(inventoryItem.add_date)
-                      .add(inventoryItem.shelflife, 'days')
-                      .fromNow()}
-                  </span>
+                  <span>{inventoryItem.amount}</span>
 
                   <button
                     data-id={inventoryItem.id}
                     data-name={inventoryItem.name}
                     data-add-date={inventoryItem.add_date}
                     data-amount={inventoryItem.amount}
-                    data-shelflife={inventoryItem.shelflife}
+                    data-location={inventoryItem.location}
+                    data-expiration={inventoryItem.expiration}
                     onClick={this.editItem}
                   >
                     Edit
