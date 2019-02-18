@@ -9,7 +9,7 @@ const db = require('knex')({
     database: 'food',
     charset: 'utf8',
   },
-  debug: true,
+  // debug: true,
 });
 
 module.exports = db;

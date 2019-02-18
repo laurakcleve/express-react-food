@@ -5,18 +5,22 @@ import styled from 'styled-components';
 class Dishes extends Component {
   constructor(props) {
     super(props);
-    this.state = { loading: true, newDishName: '', newDishItems: [] };
+    this.state = { loading: true, newDishName: '', newDishItemSets: [] };
 
     this.showDishItems = this.showDishItems.bind(this);
-    this.addItem = this.addItem.bind(this);
+    this.addItemSet = this.addItemSet.bind(this);
+    this.addItemSetItem = this.addItemSetItem.bind(this);
     this.saveDish = this.saveDish.bind(this);
     this.handleDishNameChange = this.handleDishNameChange.bind(this);
     this.handleItemNameChange = this.handleItemNameChange.bind(this);
+    this.handleItemOptionalChange = this.handleItemOptionalChange.bind(this);
     this.editDish = this.editDish.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleEditItemNameChange = this.handleEditItemNameChange.bind(this);
+    this.handleEditItemOptionalChange = this.handleEditItemOptionalChange.bind(this);
     this.handleEditItemRemove = this.handleEditItemRemove.bind(this);
     this.handleEditItemAdd = this.handleEditItemAdd.bind(this);
+    this.addEditItemSetItem = this.addEditItemSetItem.bind(this);
     this.saveEditDish = this.saveEditDish.bind(this);
     this.cancelEditDish = this.cancelEditDish.bind(this);
   }
@@ -49,23 +53,39 @@ class Dishes extends Component {
     this.setState({ selectedDish });
   }
 
+  // TODO: merge this into handleChange
   handleDishNameChange(event) {
     const { value } = event.target;
     this.setState({ newDishName: value });
   }
 
-  addItem() {
-    const { newDishItems } = this.state;
-    newDishItems.push({ name: '', key: Date.now() });
-    this.setState({ newDishItems });
+  addItemSet() {
+    const { newDishItemSets } = this.state;
+    newDishItemSets.push({ items: [{ name: '', id: Date.now() }], optional: '', id: Date.now() });
+    this.setState({ newDishItemSets });
+  }
+
+  addItemSetItem(event) {
+    event.preventDefault();
+    const { itemSetIndex } = event.target.dataset;
+    const { newDishItemSets } = this.state;
+    newDishItemSets[itemSetIndex].items.push({ name: '', id: Date.now() });
+    this.setState({ newDishItemSets });
   }
 
   handleItemNameChange(event) {
     const { value } = event.target;
-    const { index } = event.target.dataset;
-    const { newDishItems } = this.state;
-    newDishItems[index].name = value;
-    this.setState({ newDishItems });
+    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
+    const { newDishItemSets } = this.state;
+    newDishItemSets[itemSetIndex].items[itemSetItemIndex].name = value;
+    this.setState({ newDishItemSets });
+  }
+
+  handleItemOptionalChange(event) {
+    const { itemSetIndex } = event.target.dataset;
+    const { newDishItemSets } = this.state;
+    newDishItemSets[itemSetIndex].optional = !newDishItemSets[itemSetIndex].optional;
+    this.setState({ newDishItemSets });
   }
 
   saveDish(event) {
@@ -81,7 +101,7 @@ class Dishes extends Component {
           this.fetchData();
           this.setState({
             newDishName: '',
-            newDishItems: [],
+            newDishItemSets: [],
           });
         }
       })
@@ -91,8 +111,13 @@ class Dishes extends Component {
   editDish(event) {
     const { id, name } = event.target.dataset;
     const { dishes } = this.state;
-    const editDishItems = dishes.filter((dish) => dish.id === parseInt(id, 10))[0].items.map((item) => item.name);
-    this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItems });
+    const dishForEdit = dishes.filter((dish) => dish.id === parseInt(id, 10))[0];
+    const editDishItemSets = dishForEdit.itemSets.map((itemSet) => ({
+      id: itemSet.id,
+      optional: itemSet.optional,
+      items: itemSet.items.map((item) => ({ id: item.id, name: item.name })),
+    }));
+    this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItemSets });
   }
 
   handleChange(event) {
@@ -103,44 +128,60 @@ class Dishes extends Component {
 
   handleEditItemNameChange(event) {
     const { value } = event.target;
-    const { index } = event.target.dataset;
-    const { editDishItems } = this.state;
+    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
+    const { editDishItemSets } = this.state;
 
-    editDishItems[index] = value;
+    editDishItemSets[itemSetIndex].items[itemSetItemIndex].name = value;
 
-    this.setState({ editDishItems });
+    this.setState({ editDishItemSets });
+  }
+
+  handleEditItemOptionalChange(event) {
+    const { itemSetIndex } = event.target.dataset;
+    const { editDishItemSets } = this.state;
+    editDishItemSets[itemSetIndex].optional = !editDishItemSets[itemSetIndex].optional;
+    this.setState({ editDishItemSets });
   }
 
   handleEditItemRemove(event) {
     event.preventDefault();
+    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
+    const { editDishItemSets } = this.state;
 
-    const { index } = event.target.dataset;
-    const { editDishItems } = this.state;
+    if (editDishItemSets[itemSetIndex].items.length === 1) {
+      editDishItemSets.splice(itemSetIndex, 1);
+    } else {
+      editDishItemSets[itemSetIndex].items.splice(itemSetItemIndex, 1);
+    }
 
-    editDishItems.splice(index, 1);
-
-    this.setState({ editDishItems });
+    this.setState({ editDishItemSets });
   }
 
   handleEditItemAdd(event) {
     event.preventDefault();
+    const { editDishItemSets } = this.state;
 
-    const { editDishItems } = this.state;
+    editDishItemSets.push({ items: [{ name: '', id: Date.now() }], optional: '', id: Date.now() });
+    this.setState({ editDishItemSets });
+  }
 
-    editDishItems.push('');
-
-    this.setState({ editDishItems });
+  addEditItemSetItem(event) {
+    event.preventDefault();
+    const { itemSetIndex } = event.target.dataset;
+    const { editDishItemSets } = this.state;
+    editDishItemSets[itemSetIndex].items.push({ name: '', id: Date.now() });
+    this.setState({ editDishItemSets });
   }
 
   saveEditDish(event) {
     event.preventDefault();
 
-    const { editDishID, editDishName, editDishItems, items } = this.state;
+    const { editDishID, editDishName, editDishItemSets, items } = this.state;
 
     const saveData = {
       editDishID,
       editDishName,
-      editDishItems,
+      editDishItemSets,
       items,
     };
 
@@ -165,7 +206,7 @@ class Dishes extends Component {
   }
 
   cancelEditDish() {
-    this.setState({ editDishID: '' });
+    this.setState({ editDishID: '', editDishItemSets: [] });
   }
 
   render() {
@@ -175,10 +216,10 @@ class Dishes extends Component {
       dishes,
       selectedDish,
       newDishName,
-      newDishItems,
+      newDishItemSets,
       editDishID,
       editDishName,
-      editDishItems,
+      editDishItemSets,
     } = this.state;
 
     if (loading) return <div>Loading...</div>;
@@ -199,7 +240,7 @@ class Dishes extends Component {
                   </button>
 
                   {editDishID === dish.id && (
-                    <form>
+                    <form className="edit-dish-form">
                       <label htmlFor="editDishName">
                         Name
                         <input type="text" name="editDishName" value={editDishName} onChange={this.handleChange} />
@@ -209,12 +250,49 @@ class Dishes extends Component {
                       <div>
                         Items
                         <br />
-                        {editDishItems.map((item, index) => (
+                        {editDishItemSets.map((itemSet, itemSetIndex) => (
                           <React.Fragment>
-                            <input value={item} data-index={index} onChange={this.handleEditItemNameChange} />
-                            <button onClick={this.handleEditItemRemove} data-index={index}>
-                              Remove
+                            {itemSet.items.map((itemSetItem, itemSetItemIndex) => (
+                              <React.Fragment>
+                                <input
+                                  value={itemSetItem.name}
+                                  data-item-set-index={itemSetIndex}
+                                  data-item-set-item-index={itemSetItemIndex}
+                                  onChange={this.handleEditItemNameChange}
+                                  list={`${itemSetItem.id}List`}
+                                />
+                                <datalist id={`${itemSetItem.id}List`}>
+                                  {items.map((item) => (
+                                    <option key={item.id}>{item.name}</option>
+                                  ))}
+                                </datalist>
+
+                                <button
+                                  className="remove"
+                                  data-item-set-index={itemSetIndex}
+                                  data-item-set-item-index={itemSetItemIndex}
+                                  onClick={this.handleEditItemRemove}
+                                >
+                                  Remove
+                                </button>
+                              </React.Fragment>
+                            ))}
+
+                            <label htmlFor={`${itemSetIndex}Optional`} className="optional">
+                              Optional
+                              <input
+                                type="checkbox"
+                                id={`${itemSetIndex}Optional`}
+                                checked={itemSet.optional}
+                                data-item-set-index={itemSetIndex}
+                                onChange={this.handleEditItemOptionalChange}
+                              />
+                            </label>
+
+                            <button data-item-set-index={itemSetIndex} onClick={this.addEditItemSetItem}>
+                              Add substitute
                             </button>
+                            <br />
                           </React.Fragment>
                         ))}
                         <button onClick={this.handleEditItemAdd}>Add Item</button>
@@ -234,25 +312,44 @@ class Dishes extends Component {
                 <input type="text" name="newDishName" value={newDishName} onChange={this.handleDishNameChange} />
               </label>
 
-              {newDishItems.map((newDishItem, index) => (
-                <div key={newDishItem.key}>
-                  <input
-                    type="text"
-                    value={newDishItem.name}
-                    data-index={index}
-                    onChange={this.handleItemNameChange}
-                    list={`${newDishItem.key}List`}
-                  />
+              {newDishItemSets.map((newDishItemSet, itemSetIndex) => (
+                <div key={newDishItemSet.id}>
+                  {newDishItemSet.items.map((itemSetItem, itemIndex) => (
+                    <React.Fragment key={itemSetItem.id}>
+                      <input
+                        type="text"
+                        value={itemSetItem.name}
+                        data-item-set-index={itemSetIndex}
+                        data-item-set-item-index={itemIndex}
+                        onChange={this.handleItemNameChange}
+                        list={`${itemSetItem.id}List`}
+                      />
+                      <datalist id={`${itemSetItem.id}List`}>
+                        {items.map((item) => (
+                          <option key={item.id}>{item.name}</option>
+                        ))}
+                      </datalist>
+                    </React.Fragment>
+                  ))}
 
-                  <datalist id={`${newDishItem.key}List`}>
-                    {items.map((item) => (
-                      <option key={item.id}>{item.name}</option>
-                    ))}
-                  </datalist>
+                  <button data-item-set-index={itemSetIndex} onClick={this.addItemSetItem}>
+                    Add substitute
+                  </button>
+
+                  <label htmlFor={`${itemSetIndex}Optional`}>
+                    Optional
+                    <input
+                      type="checkbox"
+                      id={`${itemSetIndex}Optional`}
+                      checked={newDishItemSet.optional}
+                      data-item-set-index={itemSetIndex}
+                      onChange={this.handleItemOptionalChange}
+                    />
+                  </label>
                 </div>
               ))}
 
-              <button type="button" onClick={this.addItem}>
+              <button type="button" onClick={this.addItemSet}>
                 Add item
               </button>
 
@@ -266,8 +363,13 @@ class Dishes extends Component {
             <h4>Items</h4>
             {selectedDish && (
               <ul>
-                {selectedDish.items.map((item) => (
-                  <li key={item.id}>{item.name}</li>
+                {selectedDish.itemSets.map((itemSet) => (
+                  <li key={itemSet.id}>
+                    {itemSet.items.map((item) => (
+                      <span>{`${item.name}/`}</span>
+                    ))}{' '}
+                    {itemSet.optional && <span>(optional)</span>}
+                  </li>
                 ))}
               </ul>
             )}
@@ -297,7 +399,28 @@ const StyledDishes = styled.div`
 
     li {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 4fr 1fr;
+    }
+  }
+
+  .item-list {
+    li {
+      display: block;
+    }
+  }
+
+  .edit-dish-form {
+    input {
+      display: inline;
+      max-width: 120px;
+    }
+
+    button.remove {
+      display: inline;
+    }
+
+    .optional {
+      display: inline;
     }
   }
 `;

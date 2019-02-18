@@ -80,13 +80,7 @@ const getInventoryItemDishes = (id) =>
 //
 //   GET INVENTORY ITEM
 //----------------------------------------------------------------------------------
-const getInventoryItem = (id) =>
-  Promise.all([getNakedInventoryItem(id), getInventoryItemDishes(id)]).then(
-    (inventoryItem) => ({
-      ...inventoryItem[0],
-      dishes: inventoryItem[1],
-    })
-  );
+const getInventoryItem = (id) => getNakedInventoryItem(id);
 
 //
 //   GET INVENTORY
@@ -184,27 +178,56 @@ const getNakedDish = (id) =>
     .first();
 
 //
+//   GET DISH ITEM SETS
+//----------------------------------------------------------------------------------
+const getDishItemSets = (id) =>
+  db('dish')
+    .select('item_set.id', 'item_set.optional')
+    .innerJoin('item_set', 'item_set.dish_id', 'dish.id')
+    .where('dish.id', id);
+
+//
+//   GET DISH ITEM SET ITEMS
+//----------------------------------------------------------------------------------
+const getDishItemSetItems = (id) =>
+  db('item_set')
+    .select(
+      'item.id',
+      'item.name',
+      'item_set_item.amount_num',
+      'item_set_item.amount_unit'
+    )
+    .innerJoin('item_set_item', 'item_set_item.item_set_id', 'item_set.id')
+    .innerJoin('item', 'item.id', 'item_set_item.item_id')
+    .where('item_set.id', id);
+
+//
 //   GET DISH ITEMS
 //----------------------------------------------------------------------------------
 const getDishItems = (id) =>
-  db('dish')
-    .select('item.id', 'item.name')
-    .innerJoin('dish_item', 'dish_item.dish_id', 'dish.id')
-    .innerJoin('item', 'item.id', 'dish_item.item_id')
-    .where('dish.id', id);
+  getDishItemSets(id).then((itemSets) =>
+    Promise.all(
+      itemSets.map((itemSet) => getDishItemSetItems(itemSet.id))
+    ).then((itemSetsWithItems) => {
+      const finalItemSets = itemSets.map((itemSet, index) => ({
+        id: itemSet.id,
+        optional: itemSet.optional,
+        items: itemSetsWithItems[index],
+      }));
+      return Promise.resolve(finalItemSets);
+    })
+  );
 
 //
 //   GET DISH
 //----------------------------------------------------------------------------------
 const getDish = (id) =>
-  Promise.all([getNakedDish(id), getDishItems(id)]).then(
-    (dish) =>
-      console.log(dish) || {
-        ...dish[0],
-        items: dish[1],
-      }
-  );
+  Promise.all([getNakedDish(id), getDishItems(id)]).then((dish) => ({
+    ...dish[0],
+    itemSets: dish[1],
+  }));
 
+//
 //   GET DISHES
 //----------------------------------------------------------------------------------
 const getDishes = () =>
@@ -212,62 +235,100 @@ const getDishes = () =>
     .select('id')
     .then((ids) => Promise.all(ids.map((id) => getDish(id.id))));
 
+//
 //   SAVE DISH
 //----------------------------------------------------------------------------------
 const saveDish = (data) =>
   db('dish')
     .insert({ name: data.newDishName })
     .returning('id')
-    .then((dishIDs) => {
-      const itemNames = data.items.map((item) => item.name);
-
-      return Promise.all(
-        data.newDishItems.map((newItem) => {
-          if (itemNames.includes(newItem.name)) {
-            const existingItem = data.items.filter(
-              (item) => item.name === newItem.name
-            )[0];
-
-            return db('dish_item')
-              .insert({
-                dish_id: dishIDs[0],
-                item_id: existingItem.id,
-              })
-              .returning('id');
-          }
-
-          return db('item')
-            .insert({ name: newItem.name })
+    .then((dishIDs) =>
+      Promise.all(
+        data.newDishItemSets.map((newItemSet) =>
+          db('item_set')
+            .insert({
+              dish_id: dishIDs[0],
+              optional: newItemSet.optional || null,
+            })
             .returning('id')
-            .then((itemIDs) =>
-              db('dish_item')
-                .insert({ dish_id: dishIDs[0], item_id: itemIDs[0] })
-                .returning('id')
-            );
-        })
-      );
-    });
+            .then((newItemSetIDs) =>
+              Promise.all(
+                newItemSet.items.map((itemSetItem) =>
+                  itemCheck(data.items, itemSetItem.name).then((itemID) =>
+                    db('item_set_item').insert({
+                      item_id: itemID,
+                      item_set_id: newItemSetIDs[0],
+                    })
+                  )
+                )
+              )
+            )
+        )
+      )
+    );
 
+//
 //   EDIT DISH
 //----------------------------------------------------------------------------------
 const editDish = (data) =>
-  Promise.all(
-    data.editDishItems.map((item) => itemCheck(data.items, item))
-  ).then((results) =>
-    db('dish_item')
-      .del()
-      .where('dish_id', data.editDishID)
-      .then(() =>
+  db('item_set')
+    .select('id')
+    .where('dish_id', data.editDishID)
+    .then((itemSets) =>
+      Promise.all(
+        itemSets
+          .map((itemSet) =>
+            db('item_set_item')
+              .del()
+              .where('item_set_id', itemSet.id)
+          )
+          .concat(
+            db('item_set')
+              .del()
+              .where('dish_id', data.editDishID)
+          )
+      ).then(() =>
         Promise.all(
-          results.map((itemID) =>
-            db('dish_item').insert({
-              dish_id: data.editDishID,
-              item_id: itemID,
-            })
+          data.editDishItemSets.map((itemSet) =>
+            db('item_set')
+              .insert({
+                dish_id: data.editDishID,
+                optional: itemSet.optional || null,
+              })
+              .returning('id')
+              .then((newItemSetIDs) =>
+                Promise.all(
+                  itemSet.items.map((itemSetItem) =>
+                    itemCheck(data.items, itemSetItem.name).then((itemID) =>
+                      db('item_set_item').insert({
+                        item_id: itemID,
+                        item_set_id: newItemSetIDs[0],
+                      })
+                    )
+                  )
+                )
+              )
           )
         )
       )
-  );
+    );
+// Promise.all(
+//   data.editDishItems.map((item) => itemCheck(data.items, item))
+// ).then((results) =>
+//   db('dish_item')
+//     .del()
+//     .where('dish_id', data.editDishID)
+//     .then(() =>
+//       Promise.all(
+//         results.map((itemID) =>
+//           db('dish_item').insert({
+//             dish_id: data.editDishID,
+//             item_id: itemID,
+//           })
+//         )
+//       )
+//     )
+// );
 
 module.exports = {
   getItems,
