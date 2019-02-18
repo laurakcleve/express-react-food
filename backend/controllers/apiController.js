@@ -55,3 +55,10 @@ exports.saveDish = (req, res) => {
     .then((dish) => res.json(dish))
     .catch((error) => res.status(500).json({ error }));
 };
+
+exports.editDish = (req, res) => {
+  queries
+    .editDish(req.body)
+    .then((dishes) => res.json(dishes))
+    .catch((error) => res.status(500).json({ error }));
+};

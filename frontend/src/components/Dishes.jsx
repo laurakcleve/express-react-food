@@ -12,6 +12,13 @@ class Dishes extends Component {
     this.saveDish = this.saveDish.bind(this);
     this.handleDishNameChange = this.handleDishNameChange.bind(this);
     this.handleItemNameChange = this.handleItemNameChange.bind(this);
+    this.editDish = this.editDish.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleEditItemNameChange = this.handleEditItemNameChange.bind(this);
+    this.handleEditItemRemove = this.handleEditItemRemove.bind(this);
+    this.handleEditItemAdd = this.handleEditItemAdd.bind(this);
+    this.saveEditDish = this.saveEditDish.bind(this);
+    this.cancelEditDish = this.cancelEditDish.bind(this);
   }
 
   componentDidMount() {
@@ -63,7 +70,6 @@ class Dishes extends Component {
 
   saveDish(event) {
     event.preventDefault();
-    console.log('saving');
     fetch('/api/dishes/savedish', {
       method: 'POST',
       body: JSON.stringify(this.state),
@@ -82,8 +88,98 @@ class Dishes extends Component {
     );
   }
 
+  editDish(event) {
+    const { id, name } = event.target.dataset;
+    const { dishes } = this.state;
+    const editDishItems = dishes.filter((dish) => dish.id === parseInt(id, 10))[0].items.map((item) => item.name);
+    this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItems });
+  }
+
+  handleChange(event) {
+    const { value, name, type } = event.target;
+    const val = type === 'number' ? parseFloat(value) || '' : value;
+    this.setState({ [name]: val });
+  }
+
+  handleEditItemNameChange(event) {
+    const { value } = event.target;
+    const { index } = event.target.dataset;
+    const { editDishItems } = this.state;
+
+    editDishItems[index] = value;
+
+    this.setState({ editDishItems });
+  }
+
+  handleEditItemRemove(event) {
+    event.preventDefault();
+
+    const { index } = event.target.dataset;
+    const { editDishItems } = this.state;
+
+    editDishItems.splice(index, 1);
+
+    this.setState({ editDishItems });
+  }
+
+  handleEditItemAdd(event) {
+    event.preventDefault();
+
+    const { editDishItems } = this.state;
+
+    editDishItems.push('');
+
+    this.setState({ editDishItems });
+  }
+
+  saveEditDish(event) {
+    event.preventDefault();
+
+    const { editDishID, editDishName, editDishItems, items } = this.state;
+
+    const saveData = {
+      editDishID,
+      editDishName,
+      editDishItems,
+      items,
+    };
+
+    fetch('/api/dishes/editdish', {
+      method: 'POST',
+      body: JSON.stringify(saveData),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) =>
+      res.json().then((resJSON) => {
+        console.log(resJSON);
+        if (res.ok) {
+          this.fetchData();
+          this.setState({
+            editDishName: '',
+            editDishID: '',
+            editDishItems: [],
+            selectedDish: null,
+          });
+        }
+      })
+    );
+  }
+
+  cancelEditDish() {
+    this.setState({ editDishID: '' });
+  }
+
   render() {
-    const { loading, items, dishes, selectedDish, newDishName, newDishItems } = this.state;
+    const {
+      loading,
+      items,
+      dishes,
+      selectedDish,
+      newDishName,
+      newDishItems,
+      editDishID,
+      editDishName,
+      editDishItems,
+    } = this.state;
 
     if (loading) return <div>Loading...</div>;
 
@@ -94,9 +190,40 @@ class Dishes extends Component {
           <div className="dish-list">
             <ul>
               {dishes.map((dish) => (
-                <button key={dish.id} data-id={dish.id} onClick={this.showDishItems}>
-                  {dish.name}
-                </button>
+                <li key={dish.id}>
+                  <button data-id={dish.id} onClick={this.showDishItems}>
+                    {dish.name}
+                  </button>
+                  <button onClick={this.editDish} data-id={dish.id} data-name={dish.name}>
+                    Edit
+                  </button>
+
+                  {editDishID === dish.id && (
+                    <form>
+                      <label htmlFor="editDishName">
+                        Name
+                        <input type="text" name="editDishName" value={editDishName} onChange={this.handleChange} />
+                      </label>
+
+                      <br />
+                      <div>
+                        Items
+                        <br />
+                        {editDishItems.map((item, index) => (
+                          <React.Fragment>
+                            <input value={item} data-index={index} onChange={this.handleEditItemNameChange} />
+                            <button onClick={this.handleEditItemRemove} data-index={index}>
+                              Remove
+                            </button>
+                          </React.Fragment>
+                        ))}
+                        <button onClick={this.handleEditItemAdd}>Add Item</button>
+                        <button onClick={this.cancelEditDish}>Cancel</button>
+                        <button onClick={this.saveEditDish}>Save</button>
+                      </div>
+                    </form>
+                  )}
+                </li>
               ))}
             </ul>
 
@@ -162,6 +289,16 @@ const StyledDishes = styled.div`
 
   button {
     display: block;
+    max-width: 200px;
+  }
+
+  ul {
+    list-style-type: none;
+
+    li {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
   }
 `;
 

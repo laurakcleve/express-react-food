@@ -35,7 +35,7 @@ class Inventory extends Component {
           const sortedItems = []
             .concat(inventoryItems)
             .sort((a, b) => moment(a.expiration).valueOf() - moment(b.expiration).valueOf());
-          this.setState({ inventoryItems: sortedItems });
+          this.setState({ inventoryItems: sortedItems, sortBy: 'expiration' });
         }),
 
       fetch('/api/items')

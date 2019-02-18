@@ -14,5 +14,6 @@ router.get('/itemlocations', controller.getItemLocations);
 
 router.get('/dishes', controller.getDishes);
 router.post('/dishes/savedish', controller.saveDish);
+router.post('/dishes/editdish', controller.editDish);
 
 module.exports = router;
