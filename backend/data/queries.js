@@ -250,11 +250,24 @@ const saveDish = (data) =>
 
 //   EDIT DISH
 //----------------------------------------------------------------------------------
-const editDish = (data) => Promise.all(data.editDishItems.map((item) => {
-  return itemCheck(data.items, item)
-})).then((results) => {
-  return db('dish_item').del().where('dish_id', data.editDishID).then(() => Promise.all(results.map((itemID) => db('dish_item').insert({ dish_id: data.editDishID, item_id: itemID}))))
-})
+const editDish = (data) =>
+  Promise.all(
+    data.editDishItems.map((item) => itemCheck(data.items, item))
+  ).then((results) =>
+    db('dish_item')
+      .del()
+      .where('dish_id', data.editDishID)
+      .then(() =>
+        Promise.all(
+          results.map((itemID) =>
+            db('dish_item').insert({
+              dish_id: data.editDishID,
+              item_id: itemID,
+            })
+          )
+        )
+      )
+  );
 
 module.exports = {
   getItems,
@@ -265,5 +278,5 @@ module.exports = {
   getItemLocations,
   getDishes,
   saveDish,
-  editDish
+  editDish,
 };
