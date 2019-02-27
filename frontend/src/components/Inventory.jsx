@@ -32,10 +32,8 @@ class Inventory extends Component {
       fetch('/api/inventory')
         .then((res) => res.json())
         .then((inventoryItems) => {
-          const sortedItems = []
-            .concat(inventoryItems)
-            .sort((a, b) => moment(a.expiration).valueOf() - moment(b.expiration).valueOf());
-          this.setState({ inventoryItems: sortedItems, sortBy: 'expiration' });
+          const { sortBy } = this.state;
+          this.setState({ inventoryItems, sortBy: '' }, () => this.sortItems(sortBy || 'expiration'));
         }),
 
       fetch('/api/items')
@@ -56,6 +54,10 @@ class Inventory extends Component {
 
   handleSort(event) {
     const { category } = event.target.dataset;
+    this.sortItems(category);
+  }
+
+  sortItems(category) {
     const { inventoryItems, sortBy } = this.state;
     let sortedItems;
     let newSortBy;
@@ -269,7 +271,7 @@ class Inventory extends Component {
         <div className="container">
           <div className="item-list">
             <ul>
-              <li>
+              <li className="header">
                 <button onClick={this.handleSort} data-category="name">
                   Name
                 </button>
@@ -284,7 +286,7 @@ class Inventory extends Component {
 
               {inventoryItems.map((inventoryItem) => (
                 <li key={inventoryItem.id}>
-                  <button data-id={inventoryItem.id} onClick={this.showItemDishes}>
+                  <button className="item-name" data-id={inventoryItem.id} onClick={this.showItemDishes}>
                     {inventoryItem.name}
                   </button>
 
@@ -295,6 +297,7 @@ class Inventory extends Component {
                   <span>{inventoryItem.amount}</span>
 
                   <button
+                    className="edit"
                     data-id={inventoryItem.id}
                     data-name={inventoryItem.name}
                     data-add-date={inventoryItem.add_date}
@@ -306,7 +309,7 @@ class Inventory extends Component {
                     Edit
                   </button>
 
-                  <button data-id={inventoryItem.id} onClick={this.deleteItem}>
+                  <button className="delete" data-id={inventoryItem.id} onClick={this.deleteItem}>
                     Remove
                   </button>
 
@@ -462,9 +465,6 @@ class Inventory extends Component {
 }
 
 const StyledInventory = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-
   .container {
     display: grid;
     grid-template-columns: 4fr 2fr;
@@ -475,12 +475,62 @@ const StyledInventory = styled.div`
 
     li {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: 4fr 4fr 3fr 2fr 1fr 1fr;
+      margin-bottom: 3px;
+      border-radius: 4px;
+      padding: 0px 5px;
+      background-color: #fff;
+      box-shadow: 1px 1px 3px 0px #e8e8e8;
+      font-size: 14px;
+
+      span {
+        padding-top: 12px;
+      }
+
+      &.header {
+        background-color: transparent;
+        box-shadow: none;
+        text-align: left;
+        font-size: 12px;
+        margin-bottom: 8px;
+
+        button {
+          background-color: transparent;
+          border: none;
+          text-align: left;
+        }
+
+        span {
+          padding-top: 0;
+        }
+      }
+
+      button.edit,
+      button.delete {
+        background-color: transparent;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin: 7px;
+        padding: 5px 3px;
+      }
+
+      button.edit {
+      }
+
+      button.delete {
+      }
     }
   }
 
   label {
     display: block;
+  }
+
+  button.item-name {
+    background-color: transparent;
+    border: none;
+    font-size: 14px;
+    text-align: left;
   }
 `;
 
