@@ -71,16 +71,25 @@ const getNakedInventoryItem = (id) =>
 //----------------------------------------------------------------------------------
 const getInventoryItemDishes = (id) =>
   db('inventory_item')
-    .select('dish.id', 'dish.name')
+    .select()
+    .distinct('dish.id')
     .innerJoin('item', 'item.id', 'inventory_item.item_id')
-    .innerJoin('dish_item', 'dish_item.item_id', 'item.id')
-    .innerJoin('dish', 'dish.id', 'dish_item.dish_id')
-    .where('inventory_item.id', id);
+    .innerJoin('item_set_item', 'item_set_item.item_id', 'item.id')
+    .innerJoin('item_set', 'item_set.id', 'item_set_item.item_set_id')
+    .innerJoin('dish', 'dish.id', 'item_set.dish_id')
+    .where('inventory_item.id', id)
+    .then((rows) => console.log(rows) || Promise.resolve(rows));
 
 //
 //   GET INVENTORY ITEM
 //----------------------------------------------------------------------------------
-const getInventoryItem = (id) => getNakedInventoryItem(id);
+const getInventoryItem = (id) =>
+  Promise.all([getNakedInventoryItem(id), getInventoryItemDishes(id)]).then(
+    (results) =>
+      Promise.all(results[1].map((dish) => getDish(dish.id))).then((dishes) =>
+        Promise.resolve({ ...results[0], dishes })
+      )
+  );
 
 //
 //   GET INVENTORY
@@ -312,23 +321,6 @@ const editDish = (data) =>
         )
       )
     );
-// Promise.all(
-//   data.editDishItems.map((item) => itemCheck(data.items, item))
-// ).then((results) =>
-//   db('dish_item')
-//     .del()
-//     .where('dish_id', data.editDishID)
-//     .then(() =>
-//       Promise.all(
-//         results.map((itemID) =>
-//           db('dish_item').insert({
-//             dish_id: data.editDishID,
-//             item_id: itemID,
-//           })
-//         )
-//       )
-//     )
-// );
 
 module.exports = {
   getItems,
