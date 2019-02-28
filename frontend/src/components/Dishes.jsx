@@ -14,6 +14,7 @@ class Dishes extends Component {
     this.handleDishNameChange = this.handleDishNameChange.bind(this);
     this.handleItemNameChange = this.handleItemNameChange.bind(this);
     this.handleItemOptionalChange = this.handleItemOptionalChange.bind(this);
+    this.handleRemoveSubstitute = this.handleRemoveSubstitute.bind(this);
     this.editDish = this.editDish.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleEditItemNameChange = this.handleEditItemNameChange.bind(this);
@@ -85,6 +86,20 @@ class Dishes extends Component {
     const { itemSetIndex } = event.target.dataset;
     const { newDishItemSets } = this.state;
     newDishItemSets[itemSetIndex].optional = !newDishItemSets[itemSetIndex].optional;
+    this.setState({ newDishItemSets });
+  }
+
+  handleRemoveSubstitute(event) {
+    event.preventDefault();
+    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
+    const { newDishItemSets } = this.state;
+
+    if (newDishItemSets[itemSetIndex].items.length === 1) {
+      newDishItemSets.splice(itemSetIndex, 1);
+    } else {
+      newDishItemSets[itemSetIndex].items.splice(itemSetItemIndex, 1);
+    }
+
     this.setState({ newDishItemSets });
   }
 
@@ -315,7 +330,7 @@ class Dishes extends Component {
               {newDishItemSets.map((newDishItemSet, itemSetIndex) => (
                 <div key={newDishItemSet.id}>
                   {newDishItemSet.items.map((itemSetItem, itemIndex) => (
-                    <React.Fragment key={itemSetItem.id}>
+                    <div className="substitute" key={itemSetItem.id}>
                       <input
                         type="text"
                         value={itemSetItem.name}
@@ -329,7 +344,16 @@ class Dishes extends Component {
                           <option key={item.id}>{item.name}</option>
                         ))}
                       </datalist>
-                    </React.Fragment>
+
+                      <button
+                        className="remove-substitute"
+                        data-item-set-index={itemSetIndex}
+                        data-item-set-item-index={itemIndex}
+                        onClick={this.handleRemoveSubstitute}
+                      >
+                        -
+                      </button>
+                    </div>
                   ))}
 
                   <button data-item-set-index={itemSetIndex} onClick={this.addItemSetItem}>
@@ -422,6 +446,19 @@ const StyledDishes = styled.div`
     .optional {
       display: inline;
     }
+  }
+
+  .substitute {
+    position: relative;
+  }
+
+  .remove-substitute {
+    position: absolute;
+    top: 0;
+    left: 175px;
+    width: 22px;
+    height: 21px;
+    margin-top: 1px;
   }
 `;
 
