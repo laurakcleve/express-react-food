@@ -379,6 +379,14 @@ class Inventory extends Component {
                       </button>
                     </form>
                   )}
+
+                  {selectedItem && selectedItem.id === inventoryItem.id && (
+                    <div>
+                      {selectedItem.dishes.map((dish) => (
+                        <p key={dish.id}>{dish.name}</p>
+                      ))}
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -447,17 +455,6 @@ class Inventory extends Component {
               </button>
             </form>
           </div>
-
-          <div className="dish-list">
-            <h4>Dishes</h4>
-            {selectedItem && (
-              <ul>
-                {selectedItem.dishes.map((dish) => (
-                  <li key={dish.id}>{dish.name}</li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
       </StyledInventory>
     );
@@ -465,11 +462,6 @@ class Inventory extends Component {
 }
 
 const StyledInventory = styled.div`
-  .container {
-    display: grid;
-    grid-template-columns: 4fr 2fr;
-  }
-
   .item-list ul {
     list-style-type: none;
 

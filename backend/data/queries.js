@@ -77,8 +77,7 @@ const getInventoryItemDishes = (id) =>
     .innerJoin('item_set_item', 'item_set_item.item_id', 'item.id')
     .innerJoin('item_set', 'item_set.id', 'item_set_item.item_set_id')
     .innerJoin('dish', 'dish.id', 'item_set.dish_id')
-    .where('inventory_item.id', id)
-    .then((rows) => console.log(rows) || Promise.resolve(rows));
+    .where('inventory_item.id', id);
 
 //
 //   GET INVENTORY ITEM
