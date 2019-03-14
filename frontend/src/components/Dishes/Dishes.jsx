@@ -2,6 +2,8 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 
+import EditDish from './EditDish';
+
 class Dishes extends Component {
   constructor(props) {
     super(props);
@@ -30,6 +32,9 @@ class Dishes extends Component {
     this.fetchData();
   }
 
+  //
+  //  FETCH DATA
+  //----------------------------------------------------------------------------------
   fetchData() {
     const fetches = [
       fetch('/api/dishes')
@@ -47,6 +52,9 @@ class Dishes extends Component {
     Promise.all(fetches).then(() => this.setState({ loading: false }));
   }
 
+  //
+  //  SHOW DISH ITEMS
+  //----------------------------------------------------------------------------------
   showDishItems(event) {
     const { id } = event.target.dataset;
     const { dishes } = this.state;
@@ -54,18 +62,27 @@ class Dishes extends Component {
     this.setState({ selectedDish });
   }
 
+  //
+  //  HANDLE DISH NAME CHANGE
+  //----------------------------------------------------------------------------------
   // TODO: merge this into handleChange
   handleDishNameChange(event) {
     const { value } = event.target;
     this.setState({ newDishName: value });
   }
 
+  //
+  //  ADD ITEM SET
+  //----------------------------------------------------------------------------------
   addItemSet() {
     const { newDishItemSets } = this.state;
     newDishItemSets.push({ items: [{ name: '', id: Date.now() }], optional: '', id: Date.now() });
     this.setState({ newDishItemSets });
   }
 
+  //
+  //  ADD ITEM SET ITEM
+  //----------------------------------------------------------------------------------
   addItemSetItem(event) {
     event.preventDefault();
     const { itemSetIndex } = event.target.dataset;
@@ -74,6 +91,9 @@ class Dishes extends Component {
     this.setState({ newDishItemSets });
   }
 
+  //
+  //  HANDLE ITEM NAME CHANGE
+  //----------------------------------------------------------------------------------
   handleItemNameChange(event) {
     const { value } = event.target;
     const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
@@ -82,6 +102,9 @@ class Dishes extends Component {
     this.setState({ newDishItemSets });
   }
 
+  //
+  //  HANDLE ITEM OPTIONAL CHANGE
+  //----------------------------------------------------------------------------------
   handleItemOptionalChange(event) {
     const { itemSetIndex } = event.target.dataset;
     const { newDishItemSets } = this.state;
@@ -89,6 +112,9 @@ class Dishes extends Component {
     this.setState({ newDishItemSets });
   }
 
+  //
+  //  HANDLE REMOVE SUBSTITUTE
+  //----------------------------------------------------------------------------------
   handleRemoveSubstitute(event) {
     event.preventDefault();
     const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
@@ -103,6 +129,9 @@ class Dishes extends Component {
     this.setState({ newDishItemSets });
   }
 
+  //
+  //  SAVE DISH
+  //----------------------------------------------------------------------------------
   saveDish(event) {
     event.preventDefault();
     fetch('/api/dishes/savedish', {
@@ -123,6 +152,9 @@ class Dishes extends Component {
     );
   }
 
+  //
+  //  EDIT DISH
+  //----------------------------------------------------------------------------------
   editDish(event) {
     const { id, name } = event.target.dataset;
     const { dishes } = this.state;
@@ -135,12 +167,18 @@ class Dishes extends Component {
     this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItemSets });
   }
 
+  //
+  //  HANDLE CHANGE
+  //----------------------------------------------------------------------------------
   handleChange(event) {
     const { value, name, type } = event.target;
     const val = type === 'number' ? parseFloat(value) || '' : value;
     this.setState({ [name]: val });
   }
 
+  //
+  //  HANDLE EDIT ITEM NAME CHANGE
+  //----------------------------------------------------------------------------------
   handleEditItemNameChange(event) {
     const { value } = event.target;
     const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
@@ -151,6 +189,9 @@ class Dishes extends Component {
     this.setState({ editDishItemSets });
   }
 
+  //
+  //  HANDLE EDIT ITEM OPTIONAL CHANGE
+  //----------------------------------------------------------------------------------
   handleEditItemOptionalChange(event) {
     const { itemSetIndex } = event.target.dataset;
     const { editDishItemSets } = this.state;
@@ -158,6 +199,9 @@ class Dishes extends Component {
     this.setState({ editDishItemSets });
   }
 
+  //
+  //  HANDLE EDIT ITEM REMOVE
+  //----------------------------------------------------------------------------------
   handleEditItemRemove(event) {
     event.preventDefault();
     const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
@@ -172,6 +216,9 @@ class Dishes extends Component {
     this.setState({ editDishItemSets });
   }
 
+  //
+  //  HANDLE EDIT ITEM ADD
+  //----------------------------------------------------------------------------------
   handleEditItemAdd(event) {
     event.preventDefault();
     const { editDishItemSets } = this.state;
@@ -180,6 +227,9 @@ class Dishes extends Component {
     this.setState({ editDishItemSets });
   }
 
+  //
+  //  ADD EDIT ITEM SET ITEM
+  //----------------------------------------------------------------------------------
   addEditItemSetItem(event) {
     event.preventDefault();
     const { itemSetIndex } = event.target.dataset;
@@ -188,6 +238,9 @@ class Dishes extends Component {
     this.setState({ editDishItemSets });
   }
 
+  //
+  //  SAVE EDIT DISH
+  //----------------------------------------------------------------------------------
   saveEditDish(event) {
     event.preventDefault();
 
@@ -220,10 +273,16 @@ class Dishes extends Component {
     );
   }
 
+  //
+  //  CANCEL EDIT DISH
+  //----------------------------------------------------------------------------------
   cancelEditDish() {
     this.setState({ editDishID: '', editDishItemSets: [] });
   }
 
+  //
+  //  RENDER
+  //----------------------------------------------------------------------------------
   render() {
     const {
       loading,
@@ -255,66 +314,19 @@ class Dishes extends Component {
                   </button>
 
                   {editDishID === dish.id && (
-                    <form className="edit-dish-form">
-                      <label htmlFor="editDishName">
-                        Name
-                        <input type="text" name="editDishName" value={editDishName} onChange={this.handleChange} />
-                      </label>
-
-                      <br />
-                      <div>
-                        Items
-                        <br />
-                        {editDishItemSets.map((itemSet, itemSetIndex) => (
-                          <React.Fragment>
-                            {itemSet.items.map((itemSetItem, itemSetItemIndex) => (
-                              <React.Fragment>
-                                <input
-                                  value={itemSetItem.name}
-                                  data-item-set-index={itemSetIndex}
-                                  data-item-set-item-index={itemSetItemIndex}
-                                  onChange={this.handleEditItemNameChange}
-                                  list={`${itemSetItem.id}List`}
-                                />
-                                <datalist id={`${itemSetItem.id}List`}>
-                                  {items.map((item) => (
-                                    <option key={item.id}>{item.name}</option>
-                                  ))}
-                                </datalist>
-
-                                <button
-                                  className="remove"
-                                  data-item-set-index={itemSetIndex}
-                                  data-item-set-item-index={itemSetItemIndex}
-                                  onClick={this.handleEditItemRemove}
-                                >
-                                  Remove
-                                </button>
-                              </React.Fragment>
-                            ))}
-
-                            <label htmlFor={`${itemSetIndex}Optional`} className="optional">
-                              Optional
-                              <input
-                                type="checkbox"
-                                id={`${itemSetIndex}Optional`}
-                                checked={itemSet.optional}
-                                data-item-set-index={itemSetIndex}
-                                onChange={this.handleEditItemOptionalChange}
-                              />
-                            </label>
-
-                            <button data-item-set-index={itemSetIndex} onClick={this.addEditItemSetItem}>
-                              Add substitute
-                            </button>
-                            <br />
-                          </React.Fragment>
-                        ))}
-                        <button onClick={this.handleEditItemAdd}>Add Item</button>
-                        <button onClick={this.cancelEditDish}>Cancel</button>
-                        <button onClick={this.saveEditDish}>Save</button>
-                      </div>
-                    </form>
+                    <EditDish
+                      items={items}
+                      editDishName={editDishName}
+                      editDishItemSets={editDishItemSets}
+                      handleChange={this.handleChange}
+                      handleEditItemAdd={this.handleEditItemAdd}
+                      handleEditItemNameChange={this.handleEditItemNameChange}
+                      handleEditItemRemove={this.handleEditItemRemove}
+                      handleEditItemOptionalChange={this.handleEditItemOptionalChange}
+                      addEditItemSetItem={this.addEditItemSetItem}
+                      cancelEditDish={this.cancelEditDish}
+                      saveEditDish={this.saveEditDish}
+                    />
                   )}
                 </li>
               ))}
