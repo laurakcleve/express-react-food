@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 
+import AddDish from './AddDish';
 import EditDish from './EditDish';
 
 class Dishes extends Component {
@@ -331,68 +332,18 @@ class Dishes extends Component {
                 </li>
               ))}
             </ul>
-
-            <form>
-              <h3>Add dish</h3>
-              <label htmlFor="name">
-                Name
-                <input type="text" name="newDishName" value={newDishName} onChange={this.handleDishNameChange} />
-              </label>
-
-              {newDishItemSets.map((newDishItemSet, itemSetIndex) => (
-                <div key={newDishItemSet.id}>
-                  {newDishItemSet.items.map((itemSetItem, itemIndex) => (
-                    <div className="substitute" key={itemSetItem.id}>
-                      <input
-                        type="text"
-                        value={itemSetItem.name}
-                        data-item-set-index={itemSetIndex}
-                        data-item-set-item-index={itemIndex}
-                        onChange={this.handleItemNameChange}
-                        list={`${itemSetItem.id}List`}
-                      />
-                      <datalist id={`${itemSetItem.id}List`}>
-                        {items.map((item) => (
-                          <option key={item.id}>{item.name}</option>
-                        ))}
-                      </datalist>
-
-                      <button
-                        className="remove-substitute"
-                        data-item-set-index={itemSetIndex}
-                        data-item-set-item-index={itemIndex}
-                        onClick={this.handleRemoveSubstitute}
-                      >
-                        -
-                      </button>
-                    </div>
-                  ))}
-
-                  <button data-item-set-index={itemSetIndex} onClick={this.addItemSetItem}>
-                    Add substitute
-                  </button>
-
-                  <label htmlFor={`${itemSetIndex}Optional`}>
-                    Optional
-                    <input
-                      type="checkbox"
-                      id={`${itemSetIndex}Optional`}
-                      checked={newDishItemSet.optional}
-                      data-item-set-index={itemSetIndex}
-                      onChange={this.handleItemOptionalChange}
-                    />
-                  </label>
-                </div>
-              ))}
-
-              <button type="button" onClick={this.addItemSet}>
-                Add item
-              </button>
-
-              <button type="submit" onClick={this.saveDish}>
-                Save
-              </button>
-            </form>
+            <AddDish
+              items={items}
+              newDishName={newDishName}
+              newDishItemSets={newDishItemSets}
+              handleDishNameChange={this.handleDishNameChange}
+              handleItemNameChange={this.handleItemNameChange}
+              handleRemoveSubstitute={this.handleRemoveSubstitute}
+              addItemSetItem={this.addItemSetItem}
+              handleItemOptionalChange={this.handleItemOptionalChange}
+              addItemSet={this.addItemSet}
+              saveDish={this.saveDish}
+            />
           </div>
 
           <div className="item-list">
