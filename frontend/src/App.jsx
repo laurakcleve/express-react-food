@@ -5,7 +5,7 @@ import { ThemeProvider } from 'styled-components';
 import theme from './theme/theme';
 import GlobalStyles from './theme/GlobalStyles';
 import Header from './components/Header';
-import Inventory from './components/Inventory';
+import Inventory from './components/Inventory/Inventory';
 import Dishes from './components/Dishes';
 
 const App = () => (

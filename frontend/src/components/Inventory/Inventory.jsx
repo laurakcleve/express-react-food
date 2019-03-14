@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 import moment from 'moment';
+import EditInventoryItem from './EditInventoryItem';
 
 class Inventory extends Component {
   constructor(props) {
@@ -28,6 +29,9 @@ class Inventory extends Component {
     this.fetchData();
   }
 
+  //
+  //  FETCH DATA
+  //----------------------------------------------------------------------------------
   fetchData() {
     const fetches = [
       fetch('/api/inventory')
@@ -59,11 +63,17 @@ class Inventory extends Component {
     Promise.all(fetches).then(() => this.setState({ loading: false }));
   }
 
+  //
+  //  HANDLE SORT
+  //----------------------------------------------------------------------------------
   handleSort(event) {
     const { category } = event.target.dataset;
     this.sortItems(category);
   }
 
+  //
+  //  SORT ITEMS
+  //----------------------------------------------------------------------------------
   sortItems(category) {
     const { inventoryItems, sortBy } = this.state;
     let sortedItems;
@@ -111,6 +121,9 @@ class Inventory extends Component {
     this.setState({ inventoryItems: sortedItems, sortBy: newSortBy });
   }
 
+  //
+  //  EDIT ITEM
+  //----------------------------------------------------------------------------------
   editItem(event) {
     const { id, name, addDate, amount, location, expiration } = event.target.dataset;
 
@@ -126,6 +139,9 @@ class Inventory extends Component {
     });
   }
 
+  //
+  //  CANCEL EDIT ITEM
+  //----------------------------------------------------------------------------------
   cancelEditItem() {
     this.setState({
       editItemID: '',
@@ -136,6 +152,9 @@ class Inventory extends Component {
     });
   }
 
+  //
+  //  SAVE EDIT ITEM
+  //----------------------------------------------------------------------------------
   saveEditItem(event) {
     event.preventDefault();
 
@@ -181,6 +200,9 @@ class Inventory extends Component {
     });
   }
 
+  //
+  //  DELETE ITEM
+  //----------------------------------------------------------------------------------
   deleteItem(event) {
     const { id } = event.target.dataset;
     fetch('/api/inventory/deleteitem', {
@@ -194,6 +216,9 @@ class Inventory extends Component {
     });
   }
 
+  //
+  //  SHOW ITEM DISHES
+  //----------------------------------------------------------------------------------
   showItemDishes(event) {
     const { id } = event.target.dataset;
     const { inventoryItems } = this.state;
@@ -207,6 +232,9 @@ class Inventory extends Component {
     this.setState({ [name]: val });
   }
 
+  //
+  //  SAVE ITEM
+  //----------------------------------------------------------------------------------
   saveItem(event) {
     event.preventDefault();
 
@@ -250,6 +278,9 @@ class Inventory extends Component {
     });
   }
 
+  //
+  //  HANDLE LOCATION FILTER
+  //----------------------------------------------------------------------------------
   handleLocationFilter(event) {
     const { name } = event.target.dataset;
     const { filteredLocations, allInventoryItems } = this.state;
@@ -260,6 +291,9 @@ class Inventory extends Component {
     this.setState({ filteredLocations, inventoryItems });
   }
 
+  //
+  //  RENDER
+  //----------------------------------------------------------------------------------
   render() {
     const {
       loading,
@@ -345,70 +379,18 @@ class Inventory extends Component {
                   </button>
 
                   {editItemID === inventoryItem.id && (
-                    <form>
-                      <label htmlFor="editItemName">
-                        Name
-                        <input
-                          type="text"
-                          name="editItemName"
-                          value={editItemName}
-                          onChange={this.handleChange}
-                          list="itemList"
-                        />
-                        <datalist id="itemList">
-                          {items.map((item) => (
-                            <option key={item.id}>{item.name}</option>
-                          ))}
-                        </datalist>
-                      </label>
-
-                      <label htmlFor="editItemAddDate">
-                        Add date
-                        <input
-                          type="text"
-                          name="editItemAddDate"
-                          value={editItemAddDate}
-                          onChange={this.handleChange}
-                        />
-                      </label>
-
-                      <label htmlFor="editItemAmount">
-                        Amount
-                        <input type="text" name="editItemAmount" value={editItemAmount} onChange={this.handleChange} />
-                      </label>
-
-                      <label htmlFor="editItemLocation">
-                        Location
-                        <input
-                          type="text"
-                          name="editItemLocation"
-                          value={editItemLocation}
-                          onChange={this.handleChange}
-                          list="itemLocationList"
-                        />
-                      </label>
-                      <datalist id="itemLocationList">
-                        {itemLocations.map((itemLocation) => (
-                          <option key={itemLocation.id}>{itemLocation.name}</option>
-                        ))}
-                      </datalist>
-
-                      <label htmlFor="editItemDaysLeft">
-                        Days left
-                        <input
-                          type="number"
-                          name="editItemDaysLeft"
-                          value={editItemDaysLeft}
-                          onChange={this.handleChange}
-                        />
-                      </label>
-
-                      <button onClick={this.cancelEditItem}>Cancel</button>
-
-                      <button type="submit" onClick={this.saveEditItem}>
-                        Save
-                      </button>
-                    </form>
+                    <EditInventoryItem
+                      items={items}
+                      itemLocations={itemLocations}
+                      editItemName={editItemName}
+                      editItemAddDate={editItemAddDate}
+                      editItemAmount={editItemAmount}
+                      editItemLocation={editItemLocation}
+                      editItemDaysLeft={editItemDaysLeft}
+                      handleChange={this.handleChange}
+                      cancelEditItem={this.cancelEditItem}
+                      saveEditItem={this.saveEditItem}
+                    />
                   )}
 
                   {selectedItem && selectedItem.id === inventoryItem.id && (
