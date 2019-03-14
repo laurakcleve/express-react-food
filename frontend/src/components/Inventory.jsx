@@ -21,6 +21,7 @@ class Inventory extends Component {
     this.cancelEditItem = this.cancelEditItem.bind(this);
     this.saveEditItem = this.saveEditItem.bind(this);
     this.deleteItem = this.deleteItem.bind(this);
+    this.handleLocationFilter = this.handleLocationFilter.bind(this);
   }
 
   componentDidMount() {
@@ -33,7 +34,9 @@ class Inventory extends Component {
         .then((res) => res.json())
         .then((inventoryItems) => {
           const { sortBy } = this.state;
-          this.setState({ inventoryItems, sortBy: '' }, () => this.sortItems(sortBy || 'expiration'));
+          this.setState({ inventoryItems, allInventoryItems: inventoryItems, sortBy: '' }, () =>
+            this.sortItems(sortBy || 'expiration')
+          );
         }),
 
       fetch('/api/items')
@@ -45,7 +48,11 @@ class Inventory extends Component {
       fetch('/api/itemlocations')
         .then((res) => res.json())
         .then((itemLocations) => {
-          this.setState({ itemLocations });
+          const filteredLocations = itemLocations.reduce((acc, curr) => {
+            acc[curr.name] = { checked: false };
+            return acc;
+          }, {});
+          this.setState({ itemLocations, filteredLocations });
         }),
     ];
 
@@ -243,12 +250,23 @@ class Inventory extends Component {
     });
   }
 
+  handleLocationFilter(event) {
+    const { name } = event.target.dataset;
+    const { filteredLocations, allInventoryItems } = this.state;
+    let { inventoryItems } = this.state;
+
+    filteredLocations[name].checked = !filteredLocations[name].checked;
+    inventoryItems = allInventoryItems.filter((item) => filteredLocations[item.location].checked === true);
+    this.setState({ filteredLocations, inventoryItems });
+  }
+
   render() {
     const {
       loading,
       items,
       inventoryItems,
       itemLocations,
+      filteredLocations,
       selectedItem,
       newItemName,
       newItemAddDate,
@@ -269,6 +287,19 @@ class Inventory extends Component {
       <StyledInventory>
         <h1>Inventory</h1>
         <div className="container">
+          <div className="location-filter">
+            {itemLocations.map((location) => (
+              <label htmlFor="">
+                <input
+                  type="checkbox"
+                  data-name={location.name}
+                  onChange={this.handleLocationFilter}
+                  checked={filteredLocations[location.name].checked}
+                />
+                {location.name}
+              </label>
+            ))}
+          </div>
           <div className="item-list">
             <ul>
               <li className="header">
@@ -523,6 +554,10 @@ const StyledInventory = styled.div`
     border: none;
     font-size: 14px;
     text-align: left;
+  }
+
+  .location-filter {
+    /* float: left; */
   }
 `;
 
