@@ -38,7 +38,7 @@ class Inventory extends Component {
         .then((res) => res.json())
         .then((inventoryItems) => {
           const { sortBy } = this.state;
-          this.setState({ inventoryItems, allInventoryItems: inventoryItems, sortBy: '' }, () =>
+          this.setState({ inventoryItems, allInventoryItems: inventoryItems, sortBy: '', sortOrder: 'asc' }, () =>
             this.sortItems(sortBy || 'expiration')
           );
         }),
@@ -75,50 +75,63 @@ class Inventory extends Component {
   //  SORT ITEMS
   //----------------------------------------------------------------------------------
   sortItems(category) {
-    const { inventoryItems, sortBy } = this.state;
+    const { inventoryItems, sortBy, sortOrder } = this.state;
     let sortedItems;
-    let newSortBy;
 
-    if (category === 'name') {
-      if (sortBy === 'name') {
-        sortedItems = [].concat(inventoryItems).reverse();
-      } else {
-        sortedItems = [].concat(inventoryItems).sort((a, b) => {
-          if (a.name < b.name) return -1;
-          if (a.name > b.name) return 1;
-          return 0;
-        });
+    const sortComparison = (sortCategory, a, b, order) => {
+      let output;
+
+      switch (sortCategory) {
+        case 'name':
+          if (order === 'asc') {
+            if (a.name < b.name) output = -1;
+            else if (a.name > b.name) output = 1;
+            else output = 0;
+          } else if (order === 'desc') {
+            if (a.name > b.name) output = -1;
+            else if (a.name < b.name) output = 1;
+            else output = 0;
+          }
+          break;
+        case 'location':
+          if (order === 'asc') {
+            if (a.location < b.location) output = -1;
+            else if (a.location > b.location) output = 1;
+            else output = 0;
+          } else if (order === 'desc') {
+            if (a.location > b.location) output = -1;
+            else if (a.location < b.location) output = 1;
+            else output = 0;
+          }
+          break;
+        case 'expiration':
+          if (order === 'asc') {
+            if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) return -1;
+            else if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) return 1;
+            output = 0;
+          } else if (order === 'desc') {
+            if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) return -1;
+            else if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) return 1;
+            output = 0;
+          }
+          break;
+        default:
+          break;
       }
-      newSortBy = 'name';
+      return output;
+    };
+
+    let newSortOrder = sortOrder;
+
+    if (sortBy !== category) {
+      newSortOrder = 'asc';
+      sortedItems = [].concat(inventoryItems).sort((a, b) => sortComparison(category, a, b, 'asc'));
+    } else {
+      newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      sortedItems = [].concat(inventoryItems).sort((a, b) => sortComparison(category, a, b, newSortOrder));
     }
 
-    if (category === 'location') {
-      if (sortBy === 'location') {
-        sortedItems = [].concat(inventoryItems).reverse();
-      } else {
-        sortedItems = [].concat(inventoryItems).sort((a, b) => {
-          if (a.location < b.location) return -1;
-          if (a.location > b.location) return 1;
-          return 0;
-        });
-      }
-      newSortBy = 'location';
-    }
-
-    if (category === 'expiration') {
-      if (sortBy === 'expiration') {
-        sortedItems = [].concat(inventoryItems).reverse();
-      } else {
-        sortedItems = [].concat(inventoryItems).sort((a, b) => {
-          if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) return -1;
-          if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) return 1;
-          return 0;
-        });
-      }
-      newSortBy = 'expiration';
-    }
-
-    this.setState({ inventoryItems: sortedItems, sortBy: newSortBy });
+    this.setState({ inventoryItems: sortedItems, sortBy: category, sortOrder: newSortOrder });
   }
 
   //
@@ -283,7 +296,7 @@ class Inventory extends Component {
   //----------------------------------------------------------------------------------
   handleLocationFilter(event) {
     const { name } = event.target.dataset;
-    const { filteredLocations, allInventoryItems } = this.state;
+    const { filteredLocations, allInventoryItems, sortBy } = this.state;
     let { inventoryItems } = this.state;
 
     filteredLocations[name].checked = !filteredLocations[name].checked;
