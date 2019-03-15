@@ -2,8 +2,9 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 
+import DishList from './DishList';
 import AddDish from './AddDish';
-import EditDish from './EditDish';
+import DishItemList from './DishItemList';
 
 class Dishes extends Component {
   constructor(props) {
@@ -304,34 +305,23 @@ class Dishes extends Component {
         <h1>Dishes</h1>
         <div className="container">
           <div className="dish-list">
-            <ul>
-              {dishes.map((dish) => (
-                <li key={dish.id}>
-                  <button data-id={dish.id} onClick={this.showDishItems}>
-                    {dish.name}
-                  </button>
-                  <button onClick={this.editDish} data-id={dish.id} data-name={dish.name}>
-                    Edit
-                  </button>
-
-                  {editDishID === dish.id && (
-                    <EditDish
-                      items={items}
-                      editDishName={editDishName}
-                      editDishItemSets={editDishItemSets}
-                      handleChange={this.handleChange}
-                      handleEditItemAdd={this.handleEditItemAdd}
-                      handleEditItemNameChange={this.handleEditItemNameChange}
-                      handleEditItemRemove={this.handleEditItemRemove}
-                      handleEditItemOptionalChange={this.handleEditItemOptionalChange}
-                      addEditItemSetItem={this.addEditItemSetItem}
-                      cancelEditDish={this.cancelEditDish}
-                      saveEditDish={this.saveEditDish}
-                    />
-                  )}
-                </li>
-              ))}
-            </ul>
+            <DishList
+              dishes={dishes}
+              items={items}
+              editDishID={editDishID}
+              editDishName={editDishName}
+              editDishItemSets={editDishItemSets}
+              showDishItems={this.showDishItems}
+              editDish={this.editDish}
+              handleChange={this.handleChange}
+              handleEditItemAdd={this.handleEditItemAdd}
+              handleEditItemNameChange={this.handleEditItemNameChange}
+              handleEditItemRemove={this.handleEditItemRemove}
+              handleEditItemOptionalChange={this.handleEditItemOptionalChange}
+              addEditItemSetItem={this.addEditItemSetItem}
+              cancelEditDish={this.cancelEditDish}
+              saveEditDish={this.saveEditDish}
+            />
             <AddDish
               items={items}
               newDishName={newDishName}
@@ -347,19 +337,7 @@ class Dishes extends Component {
           </div>
 
           <div className="item-list">
-            <h4>Items</h4>
-            {selectedDish && (
-              <ul>
-                {selectedDish.itemSets.map((itemSet) => (
-                  <li key={itemSet.id}>
-                    {itemSet.items.map((item) => (
-                      <span>{`${item.name}/`}</span>
-                    ))}{' '}
-                    {itemSet.optional && <span>(optional)</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <DishItemList selectedDish={selectedDish} />
           </div>
         </div>
       </StyledDishes>
@@ -374,54 +352,6 @@ const StyledDishes = styled.div`
   .container {
     display: grid;
     grid-template-columns: 4fr 2fr;
-  }
-
-  button {
-    display: block;
-    max-width: 200px;
-  }
-
-  ul {
-    list-style-type: none;
-
-    li {
-      display: grid;
-      grid-template-columns: 4fr 1fr;
-    }
-  }
-
-  .item-list {
-    li {
-      display: block;
-    }
-  }
-
-  .edit-dish-form {
-    input {
-      display: inline;
-      max-width: 120px;
-    }
-
-    button.remove {
-      display: inline;
-    }
-
-    .optional {
-      display: inline;
-    }
-  }
-
-  .substitute {
-    position: relative;
-  }
-
-  .remove-substitute {
-    position: absolute;
-    top: 0;
-    left: 175px;
-    width: 22px;
-    height: 21px;
-    margin-top: 1px;
   }
 `;
 
