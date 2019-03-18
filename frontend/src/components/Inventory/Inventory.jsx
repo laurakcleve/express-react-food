@@ -5,80 +5,8 @@ import moment from 'moment';
 import EditInventoryItem from './EditInventoryItem';
 
 class Inventory extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loading: true,
-      newItemName: '',
-      newItemAddDate: moment(Date.now()).format('M-D-YYYY'),
-      newItemDaysLeft: '',
-    };
-
-    this.showItemDishes = this.showItemDishes.bind(this);
-    this.handleSort = this.handleSort.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.saveItem = this.saveItem.bind(this);
-    this.editItem = this.editItem.bind(this);
-    this.cancelEditItem = this.cancelEditItem.bind(this);
-    this.saveEditItem = this.saveEditItem.bind(this);
-    this.deleteItem = this.deleteItem.bind(this);
-    this.handleLocationFilter = this.handleLocationFilter.bind(this);
-  }
-
-  componentDidMount() {
-    this.fetchData();
-  }
-
-  //
-  //  FETCH DATA
-  //----------------------------------------------------------------------------------
-  fetchData() {
-    const fetches = [
-      fetch('/api/inventory')
-        .then((res) => res.json())
-        .then((inventoryItems) => {
-          const { sortBy } = this.state;
-          this.setState({ inventoryItems, allInventoryItems: inventoryItems, sortBy: '', sortOrder: 'asc' }, () =>
-            this.sortItems(sortBy || 'expiration')
-          );
-        }),
-
-      fetch('/api/items')
-        .then((res) => res.json())
-        .then((items) => {
-          this.setState({ items });
-        }),
-
-      fetch('/api/itemlocations')
-        .then((res) => res.json())
-        .then((itemLocations) => {
-          const filteredLocations = itemLocations.reduce((acc, curr) => {
-            acc[curr.name] = { checked: false };
-            return acc;
-          }, {});
-          this.setState({ itemLocations, filteredLocations });
-        }),
-    ];
-
-    Promise.all(fetches).then(() => this.setState({ loading: false }));
-  }
-
-  //
-  //  HANDLE SORT
-  //----------------------------------------------------------------------------------
-  handleSort(event) {
-    const { category } = event.target.dataset;
-    this.sortItems(category);
-  }
-
-  //
-  //  SORT ITEMS
-  //----------------------------------------------------------------------------------
-  sortItems(category) {
-    const { inventoryItems, sortBy, sortOrder } = this.state;
-    let sortedItems;
-
-    const sortComparison = (sortCategory, a, b, order) => {
+  static sortItems(items, sortBy, sortOrder) {
+    const sortComparison = (a, b, sortCategory, order) => {
       let output;
 
       switch (sortCategory) {
@@ -121,18 +49,98 @@ class Inventory extends Component {
       return output;
     };
 
-    let newSortOrder = sortOrder;
+    const sortedItems = [].concat(items.sort((a, b) => sortComparison(a, b, sortBy, sortOrder)));
 
-    if (sortBy !== category) {
-      newSortOrder = 'asc';
-      sortedItems = [].concat(inventoryItems).sort((a, b) => sortComparison(category, a, b, 'asc'));
-    } else {
+    return sortedItems;
+  }
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      loading: true,
+      newItemName: '',
+      newItemAddDate: moment(Date.now()).format('M-D-YYYY'),
+      newItemDaysLeft: '',
+    };
+
+    this.showItemDishes = this.showItemDishes.bind(this);
+    this.handleSort = this.handleSort.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.saveItem = this.saveItem.bind(this);
+    this.editItem = this.editItem.bind(this);
+    this.cancelEditItem = this.cancelEditItem.bind(this);
+    this.saveEditItem = this.saveEditItem.bind(this);
+    this.deleteItem = this.deleteItem.bind(this);
+    this.handleLocationFilter = this.handleLocationFilter.bind(this);
+  }
+
+  componentDidMount() {
+    this.fetchData();
+  }
+
+  //
+  //  FETCH DATA
+  //----------------------------------------------------------------------------------
+  fetchData() {
+    const fetches = [
+      fetch('/api/inventory')
+        .then((res) => res.json())
+        .then((inventoryItems) => {
+          const { filteredLocations, sortBy = 'expiration', sortOrder = 'asc' } = this.state;
+
+          // Keep a copy of unsorted, unfiltered items
+          const allInventoryItems = inventoryItems;
+
+          // Filter items by current filters
+          let filteredInventoryItems = [].concat(inventoryItems);
+          if (filteredLocations.length > 0) {
+            console.log('Filters active: ', filteredLocations);
+            filteredInventoryItems = inventoryItems.filter((item) => filteredLocations.includes(item.location));
+          }
+          // Sort filtered items
+          const sortedInventoryItems = Inventory.sortItems(filteredInventoryItems, sortBy, sortOrder);
+          this.setState({ inventoryItems: sortedInventoryItems, allInventoryItems, sortBy, sortOrder });
+        }),
+
+      fetch('/api/items')
+        .then((res) => res.json())
+        .then((items) => {
+          this.setState({ items });
+        }),
+
+      fetch('/api/itemlocations')
+        .then((res) => res.json())
+        .then((itemLocations) => {
+          const { filteredLocations = [] } = this.state;
+          this.setState({ itemLocations, filteredLocations });
+        }),
+    ];
+
+    Promise.all(fetches).then(() => this.setState({ loading: false }));
+  }
+
+  //
+  //  HANDLE SORT
+  //----------------------------------------------------------------------------------
+  handleSort(event) {
+    const { category } = event.target.dataset;
+    const { inventoryItems, sortBy, sortOrder } = this.state;
+
+    let newSortOrder;
+    if (category === sortBy) {
       newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-      sortedItems = [].concat(inventoryItems).sort((a, b) => sortComparison(category, a, b, newSortOrder));
+    } else {
+      newSortOrder = 'asc';
     }
 
-    this.setState({ inventoryItems: sortedItems, sortBy: category, sortOrder: newSortOrder });
+    const newInventoryItems = Inventory.sortItems(inventoryItems, category, newSortOrder);
+
+    this.setState({ inventoryItems: newInventoryItems, sortBy: category, sortOrder: newSortOrder });
   }
+
+  //
+  //  SORT ITEMS
+  //----------------------------------------------------------------------------------
 
   //
   //  EDIT ITEM
@@ -296,12 +304,16 @@ class Inventory extends Component {
   //----------------------------------------------------------------------------------
   handleLocationFilter(event) {
     const { name } = event.target.dataset;
-    const { filteredLocations, allInventoryItems, sortBy } = this.state;
-    let { inventoryItems } = this.state;
+    const { filteredLocations, allInventoryItems, sortBy, sortOrder } = this.state;
 
-    filteredLocations[name].checked = !filteredLocations[name].checked;
-    inventoryItems = allInventoryItems.filter((item) => filteredLocations[item.location].checked === true);
-    this.setState({ filteredLocations, inventoryItems });
+    if (filteredLocations.includes(name)) {
+      filteredLocations.splice(filteredLocations.indexOf(name), 1);
+    } else {
+      filteredLocations.push(name);
+    }
+    const filteredInventoryItems = allInventoryItems.filter((item) => filteredLocations.includes(item.location));
+    const sortedInventoryItems = Inventory.sortItems(filteredInventoryItems, sortBy, sortOrder);
+    this.setState({ filteredLocations, inventoryItems: sortedInventoryItems });
   }
 
   //
@@ -341,7 +353,7 @@ class Inventory extends Component {
                   type="checkbox"
                   data-name={location.name}
                   onChange={this.handleLocationFilter}
-                  checked={filteredLocations[location.name].checked}
+                  checked={filteredLocations.includes(location.name)}
                 />
                 {location.name}
               </label>
