@@ -348,9 +348,10 @@ class Inventory extends Component {
         <div className="container">
           <div className="location-filter">
             {itemLocations.map((location) => (
-              <label htmlFor="">
+              <label htmlFor={`location${location.id}`} key={location.id}>
                 <input
                   type="checkbox"
+                  id={`location${location.id}`}
                   data-name={location.name}
                   onChange={this.handleLocationFilter}
                   checked={filteredLocations.includes(location.name)}
@@ -500,6 +501,16 @@ class Inventory extends Component {
 }
 
 const StyledInventory = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 7fr;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
   .item-list ul {
     list-style-type: none;
 

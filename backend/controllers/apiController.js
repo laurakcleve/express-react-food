@@ -62,3 +62,10 @@ exports.editDish = (req, res) => {
     .then((dishes) => res.json(dishes))
     .catch((error) => res.status(500).json({ error }));
 };
+
+exports.getDishTags = (req, res) => {
+  queries
+    .getAllDishTags()
+    .then((dishTags) => res.json(dishTags))
+    .catch((error) => res.status(500).json({ error }));
+};

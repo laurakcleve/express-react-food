@@ -6,12 +6,17 @@ import EditDish from './EditDish';
 const DishList = ({
   dishes,
   items,
+  dishTags,
   editDishID,
   editDishName,
+  editDishTags,
   editDishItemSets,
   showDishItems,
   editDish,
   handleChange,
+  handleEditDishAddTag,
+  handleEditDishTagInput,
+  handleEditDishRemoveTag,
   handleEditItemAdd,
   handleEditItemNameChange,
   handleEditItemRemove,
@@ -27,6 +32,11 @@ const DishList = ({
           <button className="dish-name" data-id={dish.id} onClick={showDishItems}>
             {dish.name}
           </button>
+
+          {dish.tags.map((tag) => (
+            <span>{tag.name}</span>
+          ))}
+
           <button className="edit" onClick={editDish} data-id={dish.id} data-name={dish.name}>
             Edit
           </button>
@@ -34,9 +44,14 @@ const DishList = ({
           {editDishID === dish.id && (
             <EditDish
               items={items}
+              dishTags={dishTags}
               editDishName={editDishName}
+              editDishTags={editDishTags}
               editDishItemSets={editDishItemSets}
               handleChange={handleChange}
+              handleEditDishAddTag={handleEditDishAddTag}
+              handleEditDishTagInput={handleEditDishTagInput}
+              handleEditDishRemoveTag={handleEditDishRemoveTag}
               handleEditItemAdd={handleEditItemAdd}
               handleEditItemNameChange={handleEditItemNameChange}
               handleEditItemRemove={handleEditItemRemove}
@@ -59,7 +74,7 @@ const StyledDishList = styled.div`
 
     li {
       display: grid;
-      grid-template-columns: 7fr 1fr;
+      grid-template-columns: 7fr 2fr 1fr;
       border: 1px solid #eaeaea;
 
       &:nth-child(even) {

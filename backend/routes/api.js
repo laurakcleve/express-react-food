@@ -16,4 +16,6 @@ router.get('/dishes', controller.getDishes);
 router.post('/dishes/savedish', controller.saveDish);
 router.post('/dishes/editdish', controller.editDish);
 
+router.get('/dishtags', controller.getDishTags);
+
 module.exports = router;

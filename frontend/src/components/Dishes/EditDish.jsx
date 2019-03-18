@@ -2,9 +2,14 @@ import React from 'react';
 
 const EditDish = ({
   items,
+  dishTags,
   editDishName,
+  editDishTags,
   editDishItemSets,
   handleChange,
+  handleEditDishAddTag,
+  handleEditDishTagInput,
+  handleEditDishRemoveTag,
   handleEditItemAdd,
   handleEditItemNameChange,
   handleEditItemRemove,
@@ -18,6 +23,33 @@ const EditDish = ({
       Name
       <input type="text" name="editDishName" value={editDishName} onChange={handleChange} />
     </label>
+
+    <label htmlFor="">
+      Tags
+      {editDishTags &&
+        editDishTags.map((tag, index) => (
+          <React.Fragment>
+            <input
+              type="text"
+              value={tag}
+              data-index={index}
+              onChange={handleEditDishTagInput}
+              list={`tag${index}List`}
+            />
+            <datalist id={`tag${index}List`}>
+              {dishTags.map((dishTag) => (
+                <option>{dishTag.name}</option>
+              ))}
+            </datalist>
+            <button data-index={index} onClick={handleEditDishRemoveTag}>
+              X
+            </button>
+          </React.Fragment>
+        ))}
+    </label>
+    <button type="button" onClick={handleEditDishAddTag}>
+      +
+    </button>
 
     <br />
     <div>

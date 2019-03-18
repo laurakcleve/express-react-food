@@ -21,6 +21,9 @@ class Dishes extends Component {
     this.handleRemoveSubstitute = this.handleRemoveSubstitute.bind(this);
     this.editDish = this.editDish.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.handleEditDishAddTag = this.handleEditDishAddTag.bind(this);
+    this.handleEditDishTagInput = this.handleEditDishTagInput.bind(this);
+    this.handleEditDishRemoveTag = this.handleEditDishRemoveTag.bind(this);
     this.handleEditItemNameChange = this.handleEditItemNameChange.bind(this);
     this.handleEditItemOptionalChange = this.handleEditItemOptionalChange.bind(this);
     this.handleEditItemRemove = this.handleEditItemRemove.bind(this);
@@ -48,6 +51,11 @@ class Dishes extends Component {
         .then((res) => res.json())
         .then((items) => {
           this.setState({ items });
+        }),
+      fetch('/api/dishtags')
+        .then((res) => res.json())
+        .then((dishTags) => {
+          this.setState({ dishTags });
         }),
     ];
 
@@ -161,12 +169,17 @@ class Dishes extends Component {
     const { id, name } = event.target.dataset;
     const { dishes } = this.state;
     const dishForEdit = dishes.filter((dish) => dish.id === parseInt(id, 10))[0];
+
+    // Deep clone
     const editDishItemSets = dishForEdit.itemSets.map((itemSet) => ({
       id: itemSet.id,
       optional: itemSet.optional,
       items: itemSet.items.map((item) => ({ id: item.id, name: item.name })),
     }));
-    this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItemSets });
+
+    const editDishTags = dishForEdit.tags.map((tag) => tag.name);
+
+    this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItemSets, editDishTags });
   }
 
   //
@@ -176,6 +189,41 @@ class Dishes extends Component {
     const { value, name, type } = event.target;
     const val = type === 'number' ? parseFloat(value) || '' : value;
     this.setState({ [name]: val });
+  }
+
+  //
+  //  HANDLE EDIT DISH ADD TAG
+  //----------------------------------------------------------------------------------
+  handleEditDishAddTag(event) {
+    event.preventDefault();
+    const { editDishTags } = this.state;
+    console.log(editDishTags);
+    editDishTags.push('');
+    this.setState({ editDishTags });
+  }
+
+  //
+  //  HANDLE EDIT DISH TAG INPUT
+  //----------------------------------------------------------------------------------
+  handleEditDishTagInput(event) {
+    const { value } = event.target;
+    const { index } = event.target.dataset;
+    const { editDishTags } = this.state;
+
+    editDishTags[index] = value;
+    this.setState({ editDishTags });
+  }
+
+  //
+  //  HANDLE EDIT DISH REMOVE TAG
+  //----------------------------------------------------------------------------------
+  handleEditDishRemoveTag(event) {
+    event.preventDefault();
+    const { index } = event.target.dataset;
+    const { editDishTags } = this.state;
+
+    editDishTags.splice(index, 1);
+    this.setState({ editDishTags });
   }
 
   //
@@ -246,40 +294,42 @@ class Dishes extends Component {
   saveEditDish(event) {
     event.preventDefault();
 
-    const { editDishID, editDishName, editDishItemSets, items } = this.state;
+    const { editDishID, editDishName, editDishItemSets, editDishTags, items, dishTags } = this.state;
+
+    const filteredDishTags = dishTags.filter((tag) => tag);
 
     const saveData = {
       editDishID,
       editDishName,
       editDishItemSets,
+      editDishTags,
       items,
+      dishTags: filteredDishTags,
     };
 
     fetch('/api/dishes/editdish', {
       method: 'POST',
       body: JSON.stringify(saveData),
       headers: { 'Content-Type': 'application/json' },
-    }).then((res) =>
-      res.json().then((resJSON) => {
-        console.log(resJSON);
-        if (res.ok) {
-          this.fetchData();
-          this.setState({
-            editDishName: '',
-            editDishID: '',
-            editDishItems: [],
-            selectedDish: null,
-          });
-        }
-      })
-    );
+    }).then((res) => {
+      if (res.ok) {
+        this.fetchData();
+        this.setState({
+          editDishName: '',
+          editDishID: '',
+          editDishItems: [],
+          editDishTags: [],
+          selectedDish: null,
+        });
+      }
+    });
   }
 
   //
   //  CANCEL EDIT DISH
   //----------------------------------------------------------------------------------
   cancelEditDish() {
-    this.setState({ editDishID: '', editDishItemSets: [] });
+    this.setState({ editDishID: '', editDishname: '', editDishItemSets: [], editDishTags: [] });
   }
 
   //
@@ -290,11 +340,13 @@ class Dishes extends Component {
       loading,
       items,
       dishes,
+      dishTags,
       selectedDish,
       newDishName,
       newDishItemSets,
       editDishID,
       editDishName,
+      editDishTags,
       editDishItemSets,
     } = this.state;
 
@@ -303,29 +355,43 @@ class Dishes extends Component {
     return (
       <StyledDishes>
         <h1>Dishes</h1>
+        <AddDish
+          items={items}
+          dishTags={dishTags}
+          newDishName={newDishName}
+          newDishItemSets={newDishItemSets}
+          handleDishNameChange={this.handleDishNameChange}
+          handleItemNameChange={this.handleItemNameChange}
+          handleRemoveSubstitute={this.handleRemoveSubstitute}
+          addItemSetItem={this.addItemSetItem}
+          handleItemOptionalChange={this.handleItemOptionalChange}
+          addItemSet={this.addItemSet}
+          saveDish={this.saveDish}
+        />
         <div className="container">
+          <div className="tags">
+            <h2>Tags</h2>
+            <ul>
+              {dishTags.map((tag) => (
+                <li>{tag.name}</li>
+              ))}
+            </ul>
+          </div>
           <div className="dish-list">
-            <AddDish
-              items={items}
-              newDishName={newDishName}
-              newDishItemSets={newDishItemSets}
-              handleDishNameChange={this.handleDishNameChange}
-              handleItemNameChange={this.handleItemNameChange}
-              handleRemoveSubstitute={this.handleRemoveSubstitute}
-              addItemSetItem={this.addItemSetItem}
-              handleItemOptionalChange={this.handleItemOptionalChange}
-              addItemSet={this.addItemSet}
-              saveDish={this.saveDish}
-            />
             <DishList
               dishes={dishes}
               items={items}
+              dishTags={dishTags}
               editDishID={editDishID}
               editDishName={editDishName}
+              editDishTags={editDishTags}
               editDishItemSets={editDishItemSets}
               showDishItems={this.showDishItems}
               editDish={this.editDish}
               handleChange={this.handleChange}
+              handleEditDishAddTag={this.handleEditDishAddTag}
+              handleEditDishTagInput={this.handleEditDishTagInput}
+              handleEditDishRemoveTag={this.handleEditDishRemoveTag}
               handleEditItemAdd={this.handleEditItemAdd}
               handleEditItemNameChange={this.handleEditItemNameChange}
               handleEditItemRemove={this.handleEditItemRemove}
@@ -347,11 +413,11 @@ class Dishes extends Component {
 
 const StyledDishes = styled.div`
   max-width: 1000px;
-  margin: 10px 50px;
+  margin: 0 auto;
 
   .container {
     display: grid;
-    grid-template-columns: 4fr 2fr;
+    grid-template-columns: 1fr 4fr 2fr;
   }
 `;
 

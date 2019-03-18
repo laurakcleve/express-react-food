@@ -42,6 +42,25 @@ const itemLocationCheck = (itemLocations, itemLocationName) => {
 };
 
 //
+//   DISH TAG CHECK
+//----------------------------------------------------------------------------------
+const dishTagCheck = (dishTags, dishTagName) => {
+  const dishTagNames = dishTags.map((dishTag) => dishTag.name);
+
+  if (dishTagNames.includes(dishTagName)) {
+    const existingDishTag = dishTags.filter(
+      (tag) => tag.name === dishTagName
+    )[0];
+    return Promise.resolve(existingDishTag.id);
+  }
+
+  return db('dish_tag')
+    .insert({ name: dishTagName })
+    .returning('id')
+    .then((newDishTagIDs) => Promise.resolve(newDishTagIDs[0]));
+};
+
+//
 //   GET ITEMS
 //----------------------------------------------------------------------------------
 const getItems = () => db('item').select();
@@ -177,6 +196,11 @@ const deleteInventoryItem = (data) =>
 const getItemLocations = () => db('inventory_item_location').select();
 
 //
+//   GET ALL DISH TAGS
+//----------------------------------------------------------------------------------
+const getAllDishTags = () => db('dish_tag').select();
+
+//
 //   GET NAKED DISH
 //----------------------------------------------------------------------------------
 const getNakedDish = (id) =>
@@ -227,13 +251,26 @@ const getDishItems = (id) =>
   );
 
 //
+//   GET DISH TAGS
+//----------------------------------------------------------------------------------
+const getDishTags = (id) =>
+  db('dish_tag')
+    .select('dish_tag.id', 'dish_tag.name')
+    .innerJoin('dish_has_tag', 'dish_has_tag.dish_tag_id', 'dish_tag.id')
+    .innerJoin('dish', 'dish.id', 'dish_has_tag.dish_id')
+    .where('dish.id', id);
+
+//
 //   GET DISH
 //----------------------------------------------------------------------------------
 const getDish = (id) =>
-  Promise.all([getNakedDish(id), getDishItems(id)]).then((dish) => ({
-    ...dish[0],
-    itemSets: dish[1],
-  }));
+  Promise.all([getNakedDish(id), getDishItems(id), getDishTags(id)]).then(
+    (dish) => ({
+      ...dish[0],
+      itemSets: dish[1],
+      tags: dish[2] || [],
+    })
+  );
 
 //
 //   GET DISHES
@@ -279,47 +316,64 @@ const saveDish = (data) =>
 //   EDIT DISH
 //----------------------------------------------------------------------------------
 const editDish = (data) =>
-  db('item_set')
-    .select('id')
-    .where('dish_id', data.editDishID)
-    .then((itemSets) =>
-      Promise.all(
-        itemSets
-          .map((itemSet) =>
-            db('item_set_item')
-              .del()
-              .where('item_set_id', itemSet.id)
-          )
-          .concat(
-            db('item_set')
-              .del()
-              .where('dish_id', data.editDishID)
-          )
-      ).then(() =>
+  Promise.all([
+    db('item_set')
+      .select('id')
+      .where('dish_id', data.editDishID)
+      .then((itemSets) =>
         Promise.all(
-          data.editDishItemSets.map((itemSet) =>
-            db('item_set')
-              .insert({
-                dish_id: data.editDishID,
-                optional: itemSet.optional || null,
-              })
-              .returning('id')
-              .then((newItemSetIDs) =>
-                Promise.all(
-                  itemSet.items.map((itemSetItem) =>
-                    itemCheck(data.items, itemSetItem.name).then((itemID) =>
-                      db('item_set_item').insert({
-                        item_id: itemID,
-                        item_set_id: newItemSetIDs[0],
-                      })
+          itemSets
+            .map((itemSet) =>
+              db('item_set_item')
+                .del()
+                .where('item_set_id', itemSet.id)
+            )
+            .concat(
+              db('item_set')
+                .del()
+                .where('dish_id', data.editDishID)
+            )
+        ).then(() =>
+          Promise.all(
+            data.editDishItemSets.map((itemSet) =>
+              db('item_set')
+                .insert({
+                  dish_id: data.editDishID,
+                  optional: itemSet.optional || null,
+                })
+                .returning('id')
+                .then((newItemSetIDs) =>
+                  Promise.all(
+                    itemSet.items.map((itemSetItem) =>
+                      itemCheck(data.items, itemSetItem.name).then((itemID) =>
+                        db('item_set_item').insert({
+                          item_id: itemID,
+                          item_set_id: newItemSetIDs[0],
+                        })
+                      )
                     )
                   )
                 )
-              )
+            )
           )
         )
-      )
-    );
+      ),
+    db('dish_has_tag')
+      .del()
+      .where('dish_id', data.editDishID)
+      .then(() =>
+        Promise.all(
+          data.editDishTags.map((tag) =>
+            dishTagCheck(data.dishTags, tag).then((tagID) =>
+              db('dish_has_tag').insert({
+                dish_id: data.editDishID,
+                dish_tag_id: tagID,
+              })
+            )
+          )
+        )
+      ),
+  ]);
 
 module.exports = {
   getItems,
@@ -328,6 +382,7 @@ module.exports = {
   editInventoryItem,
   deleteInventoryItem,
   getItemLocations,
+  getAllDishTags,
   getDishes,
   saveDish,
   editDish,
