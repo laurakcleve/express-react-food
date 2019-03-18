@@ -305,6 +305,18 @@ class Dishes extends Component {
         <h1>Dishes</h1>
         <div className="container">
           <div className="dish-list">
+            <AddDish
+              items={items}
+              newDishName={newDishName}
+              newDishItemSets={newDishItemSets}
+              handleDishNameChange={this.handleDishNameChange}
+              handleItemNameChange={this.handleItemNameChange}
+              handleRemoveSubstitute={this.handleRemoveSubstitute}
+              addItemSetItem={this.addItemSetItem}
+              handleItemOptionalChange={this.handleItemOptionalChange}
+              addItemSet={this.addItemSet}
+              saveDish={this.saveDish}
+            />
             <DishList
               dishes={dishes}
               items={items}
@@ -322,18 +334,6 @@ class Dishes extends Component {
               cancelEditDish={this.cancelEditDish}
               saveEditDish={this.saveEditDish}
             />
-            <AddDish
-              items={items}
-              newDishName={newDishName}
-              newDishItemSets={newDishItemSets}
-              handleDishNameChange={this.handleDishNameChange}
-              handleItemNameChange={this.handleItemNameChange}
-              handleRemoveSubstitute={this.handleRemoveSubstitute}
-              addItemSetItem={this.addItemSetItem}
-              handleItemOptionalChange={this.handleItemOptionalChange}
-              addItemSet={this.addItemSet}
-              saveDish={this.saveDish}
-            />
           </div>
 
           <div className="item-list">
@@ -347,7 +347,7 @@ class Dishes extends Component {
 
 const StyledDishes = styled.div`
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 10px 50px;
 
   .container {
     display: grid;

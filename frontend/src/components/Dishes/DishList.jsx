@@ -55,6 +55,7 @@ const DishList = ({
 const StyledDishList = styled.div`
   ul {
     list-style-type: none;
+    padding: 0;
 
     li {
       display: grid;
