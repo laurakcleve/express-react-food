@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
 
-import ItemSet from './ItemSet';
+import DishForm from './DishForm';
 
 class AddDish extends Component {
   constructor(props) {
@@ -10,6 +10,7 @@ class AddDish extends Component {
 
     this.handleOpen = this.handleOpen.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.cancel = this.cancel.bind(this);
   }
 
   handleOpen(event) {
@@ -22,73 +23,26 @@ class AddDish extends Component {
     this.setState({ open: false });
   }
 
+  cancel() {
+    this.setState({ open: false });
+  }
+
   render() {
-    const {
-      items,
-      newDishName,
-      newDishItemSets,
-      handleDishNameChange,
-      handleItemNameChange,
-      handleRemoveSubstitute,
-      addItemSetItem,
-      handleItemOptionalChange,
-      addItemSet,
-      saveDish,
-    } = this.props;
+    const { items, dishTags, save } = this.props;
 
     return (
       <StyledAddDish>
         <button className="add-dish" onClick={this.handleOpen}>
           +
         </button>
-        <form>
-          {this.state.open && (
-            <React.Fragment>
-              <label htmlFor="name">
-                <input
-                  className="name"
-                  type="text"
-                  placeholder="Name"
-                  name="newDishName"
-                  value={newDishName}
-                  onChange={handleDishNameChange}
-                />
-              </label>
-
-              {newDishItemSets.map((newDishItemSet, itemSetIndex) => (
-                <ItemSet
-                  key={newDishItemSet.id}
-                  items={items}
-                  newDishItemSet={newDishItemSet}
-                  itemSetIndex={itemSetIndex}
-                  handleItemNameChange={handleItemNameChange}
-                  handleItemOptionalChange={handleItemOptionalChange}
-                  handleRemoveSubstitute={handleRemoveSubstitute}
-                  addItemSetItem={addItemSetItem}
-                />
-              ))}
-
-              <button type="button" className="add-item" onClick={addItemSet}>
-                + item
-              </button>
-
-              <button type="button" className="cancel" onClick={this.handleClose}>
-                Cancel
-              </button>
-
-              <button type="submit" className="save" onClick={saveDish}>
-                Save
-              </button>
-            </React.Fragment>
-          )}
-        </form>
+        {this.state.open && <DishForm items={items} dishTags={dishTags} cancel={this.cancel} save={save} />}
       </StyledAddDish>
     );
   }
 }
 
 const StyledAddDish = styled.div`
-  button {
+  /* button {
     width: 80px;
     height: 25px;
     margin-right: 10px;
@@ -96,9 +50,9 @@ const StyledAddDish = styled.div`
     border: 1px solid transparent;
     font-size: 11px;
     font-weight: bold;
-    text-transform: uppercase;
+    text-transform: uppercase; */
 
-    &.add-dish {
+    /* &.add-dish {
       display: block;
       background-color: #bba8d6;
       border: none;
@@ -134,25 +88,12 @@ const StyledAddDish = styled.div`
       background-color: #bba8d6;
       color: #fff;
       letter-spacing: 1px;
-    }
+    } */
   }
 
-  form {
+  /* form {
     margin-top: 20px;
-  }
-
-  input.name {
-    display: block;
-    width: 250px;
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #505050;
-    font-size: 13px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
+  } */
 `;
 
 export default AddDish;

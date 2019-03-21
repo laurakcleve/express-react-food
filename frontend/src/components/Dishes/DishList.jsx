@@ -13,15 +13,6 @@ const DishList = ({
   editDishItemSets,
   showDishItems,
   editDish,
-  handleChange,
-  handleEditDishAddTag,
-  handleEditDishTagInput,
-  handleEditDishRemoveTag,
-  handleEditItemAdd,
-  handleEditItemNameChange,
-  handleEditItemRemove,
-  handleEditItemOptionalChange,
-  addEditItemSetItem,
   cancelEditDish,
   saveEditDish,
 }) => (
@@ -48,15 +39,6 @@ const DishList = ({
               editDishName={editDishName}
               editDishTags={editDishTags}
               editDishItemSets={editDishItemSets}
-              handleChange={handleChange}
-              handleEditDishAddTag={handleEditDishAddTag}
-              handleEditDishTagInput={handleEditDishTagInput}
-              handleEditDishRemoveTag={handleEditDishRemoveTag}
-              handleEditItemAdd={handleEditItemAdd}
-              handleEditItemNameChange={handleEditItemNameChange}
-              handleEditItemRemove={handleEditItemRemove}
-              handleEditItemOptionalChange={handleEditItemOptionalChange}
-              addEditItemSetItem={addEditItemSetItem}
               cancelEditDish={cancelEditDish}
               saveEditDish={saveEditDish}
             />

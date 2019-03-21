@@ -3,10 +3,10 @@ import styled from 'styled-components';
 
 const ItemSet = ({
   items,
-  newDishItemSet,
+  itemSet,
   itemSetIndex,
   handleItemNameChange,
-  handleRemoveSubstitute,
+  handleRemoveItemSubstitute,
   handleItemOptionalChange,
   addItemSetItem,
 }) => (
@@ -16,12 +16,12 @@ const ItemSet = ({
       <input
         type="checkbox"
         id={`${itemSetIndex}Optional`}
-        checked={newDishItemSet.optional}
+        checked={itemSet.optional}
         data-item-set-index={itemSetIndex}
         onChange={handleItemOptionalChange}
       />
     </label>
-    {newDishItemSet.items.map((itemSetItem, itemIndex) => (
+    {itemSet.items.map((itemSetItem, itemIndex) => (
       <React.Fragment>
         <div className="substitute" key={itemSetItem.id}>
           <input
@@ -42,7 +42,7 @@ const ItemSet = ({
             className="remove-substitute"
             data-item-set-index={itemSetIndex}
             data-item-set-item-index={itemIndex}
-            onClick={handleRemoveSubstitute}
+            onClick={handleRemoveItemSubstitute}
           >
             &mdash;
           </button>
@@ -77,11 +77,13 @@ const StyledItemSet = styled.div`
 
   button {
     &.add-substitute {
-      width: 110px;
       margin-top: 10px;
+      padding: 5px 10px;
       background-color: #d9cee8;
       color: #7e688e;
       border: none;
+      border-radius: 4px;
+      font-size: 11px;
       text-transform: uppercase;
       font-weight: bold;
     }

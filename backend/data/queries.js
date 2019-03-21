@@ -285,20 +285,20 @@ const getDishes = () =>
 //----------------------------------------------------------------------------------
 const saveDish = (data) =>
   db('dish')
-    .insert({ name: data.newDishName })
+    .insert({ name: data.name })
     .returning('id')
     .then((dishIDs) =>
       Promise.all(
-        data.newDishItemSets.map((newItemSet) =>
+        data.itemSets.map((itemSet) =>
           db('item_set')
             .insert({
               dish_id: dishIDs[0],
-              optional: newItemSet.optional || null,
+              optional: itemSet.optional || null,
             })
             .returning('id')
             .then((newItemSetIDs) =>
               Promise.all(
-                newItemSet.items.map((itemSetItem) =>
+                itemSet.items.map((itemSetItem) =>
                   itemCheck(data.items, itemSetItem.name).then((itemID) =>
                     db('item_set_item').insert({
                       item_id: itemID,
@@ -335,7 +335,7 @@ const editDish = (data) =>
             )
         ).then(() =>
           Promise.all(
-            data.editDishItemSets.map((itemSet) =>
+            data.itemSets.map((itemSet) =>
               db('item_set')
                 .insert({
                   dish_id: data.editDishID,
@@ -363,7 +363,7 @@ const editDish = (data) =>
       .where('dish_id', data.editDishID)
       .then(() =>
         Promise.all(
-          data.editDishTags.map((tag) =>
+          data.tags.map((tag) =>
             dishTagCheck(data.dishTags, tag).then((tagID) =>
               db('dish_has_tag').insert({
                 dish_id: data.editDishID,

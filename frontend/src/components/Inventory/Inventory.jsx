@@ -94,7 +94,6 @@ class Inventory extends Component {
           // Filter items by current filters
           let filteredInventoryItems = [].concat(inventoryItems);
           if (filteredLocations.length > 0) {
-            console.log('Filters active: ', filteredLocations);
             filteredInventoryItems = inventoryItems.filter((item) => filteredLocations.includes(item.location));
           }
           // Sort filtered items
