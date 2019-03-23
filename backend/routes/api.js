@@ -15,6 +15,8 @@ router.get('/itemlocations', controller.getItemLocations);
 router.get('/dishes', controller.getDishes);
 router.post('/dishes/savedish', controller.saveDish);
 router.post('/dishes/editdish', controller.editDish);
+router.post('/dishes/savehistorydate', controller.saveHistoryDate);
+router.post('/dishes/deletehistorydate', controller.deleteHistoryDate);
 
 router.get('/dishtags', controller.getDishTags);
 

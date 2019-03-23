@@ -1,17 +1,56 @@
 /* globals fetch */
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import moment from 'moment';
 
 import DishList from './DishList';
 import AddDish from './AddDish';
-import DishItemList from './DishItemList';
+import DishDetails from './DishDetails';
 
 class Dishes extends Component {
+  static sortDishes(dishes, sortBy, sortOrder) {
+    const sortComparison = (a, b, sortCategory, order) => {
+      let output;
+      switch (sortCategory) {
+        case 'name':
+          if (order === 'asc') {
+            if (a.name < b.name) output = -1;
+            else if (a.name > b.name) output = 1;
+            else output = 0;
+          } else if (order === 'desc') {
+            if (a.name > b.name) output = -1;
+            else if (a.name < b.name) output = 1;
+            else output = 0;
+          }
+          break;
+        case 'lastDate':
+          if (order === 'asc') {
+            if (moment(a.lastDate.date).valueOf() < moment(b.lastDate.date).valueOf()) output = -1;
+            else if (moment(a.lastDate.date).valueOf() > moment(b.lastDate.date).valueOf()) output = 1;
+            else output = 0;
+          } else if (order === 'desc') {
+            if (moment(a.lastDate.date).valueOf() > moment(b.lastDate.date).valueOf()) output = -1;
+            else if (moment(a.lastDate.date).valueOf() < moment(b.lastDate.date).valueOf()) output = 1;
+            else output = 0;
+          }
+          break;
+        default:
+          break;
+      }
+      return output;
+    };
+
+    const sortedDishes = [].concat(dishes.sort((a, b) => sortComparison(a, b, sortBy, sortOrder)));
+
+    return sortedDishes;
+  }
+
   constructor(props) {
     super(props);
     this.state = { loading: true };
 
     this.showDishItems = this.showDishItems.bind(this);
+    this.setSelectedDish = this.setSelectedDish.bind(this);
     this.addItemSet = this.addItemSet.bind(this);
     this.addItemSetItem = this.addItemSetItem.bind(this);
     this.saveDish = this.saveDish.bind(this);
@@ -22,10 +61,22 @@ class Dishes extends Component {
     this.saveNewDish = this.saveNewDish.bind(this);
     this.handleTagFilter = this.handleTagFilter.bind(this);
     this.handleTagFilterAll = this.handleTagFilterAll.bind(this);
+    this.saveHistoryDate = this.saveHistoryDate.bind(this);
+    this.deleteHistoryDate = this.deleteHistoryDate.bind(this);
+    this.handleSort = this.handleSort.bind(this);
   }
 
   componentDidMount() {
     this.fetchData();
+  }
+
+  //
+  //  SET SELECTED DISH
+  //----------------------------------------------------------------------------------
+  setSelectedDish(id) {
+    const { allDishes } = this.state;
+    const selectedDish = allDishes.filter((dish) => dish.id === parseInt(id, 10))[0];
+    this.setState({ selectedDish });
   }
 
   //
@@ -36,8 +87,7 @@ class Dishes extends Component {
       fetch('/api/dishes')
         .then((res) => res.json())
         .then((dishes) => {
-          const { filteredDishTags = [] } = this.state;
-          console.log('filteredDishTags', filteredDishTags);
+          const { filteredDishTags = [], selectedDish, sortBy = 'name', sortOrder = 'asc' } = this.state;
 
           // Keep a copy of unfiltered dishes
           const allDishes = dishes;
@@ -56,7 +106,15 @@ class Dishes extends Component {
             filteredDishes = filteredDishes.concat(dishes);
           }
 
-          this.setState({ dishes: filteredDishes, allDishes });
+          // Sort filtered dishes
+          const sortedDishes = Dishes.sortDishes(filteredDishes, sortBy, sortOrder);
+
+          this.setState({ dishes: sortedDishes, allDishes }, () => {
+            // Update selected dish if there is one
+            if (selectedDish) {
+              this.setSelectedDish(selectedDish.id);
+            }
+          });
         }),
       fetch('/api/items')
         .then((res) => res.json())
@@ -79,9 +137,7 @@ class Dishes extends Component {
   //----------------------------------------------------------------------------------
   showDishItems(event) {
     const { id } = event.target.dataset;
-    const { dishes } = this.state;
-    const selectedDish = dishes.filter((dish) => dish.id === parseInt(id, 10))[0];
-    this.setState({ selectedDish });
+    this.setSelectedDish(id);
   }
 
   //
@@ -391,6 +447,58 @@ class Dishes extends Component {
   }
 
   //
+  //  SAVE HISTORY DATE
+  //----------------------------------------------------------------------------------
+  saveHistoryDate(data) {
+    console.log('data', data);
+    fetch('/api/dishes/savehistorydate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) => {
+      if (res.ok) {
+        this.fetchData();
+      }
+    });
+  }
+
+  //
+  //  DELETE HISTORY DATE
+  //----------------------------------------------------------------------------------
+  deleteHistoryDate(id) {
+    const data = { id };
+
+    fetch('/api/dishes/deletehistorydate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) => {
+      if (res.ok) {
+        this.fetchData();
+      }
+    });
+  }
+
+  //
+  //  DELETE HISTORY DATE
+  //----------------------------------------------------------------------------------
+  handleSort(event) {
+    const { category } = event.target.dataset;
+    const { dishes, sortBy, sortOrder } = this.state;
+
+    let newSortOrder;
+    if (category === sortBy) {
+      newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      newSortOrder = 'asc';
+    }
+
+    const newDishes = Dishes.sortDishes(dishes, category, newSortOrder);
+
+    this.setState({ dishes: newDishes, sortBy: category, sortOrder: newSortOrder });
+  }
+
+  //
   //  RENDER
   //----------------------------------------------------------------------------------
   render() {
@@ -455,12 +563,17 @@ class Dishes extends Component {
               editDish={this.editDish}
               cancelEditDish={this.cancelEditDish}
               saveEditDish={this.saveEditDish}
+              handleSort={this.handleSort}
             />
           </div>
 
-          <div className="item-list">
-            <DishItemList selectedDish={selectedDish} />
-          </div>
+          {selectedDish && (
+            <DishDetails
+              selectedDish={selectedDish}
+              saveHistoryDate={this.saveHistoryDate}
+              deleteHistoryDate={this.deleteHistoryDate}
+            />
+          )}
         </div>
       </StyledDishes>
     );

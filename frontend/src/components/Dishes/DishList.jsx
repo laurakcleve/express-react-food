@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import moment from 'moment';
 
 import EditDish from './EditDish';
 
@@ -15,18 +16,31 @@ const DishList = ({
   editDish,
   cancelEditDish,
   saveEditDish,
+  handleSort,
 }) => (
   <StyledDishList>
     <ul>
+      <li>
+        <button onClick={handleSort} data-category="name">
+          Name
+        </button>
+        <button onClick={handleSort} data-category="lastDate">
+          Last Date
+        </button>
+      </li>
       {dishes.map((dish) => (
         <li key={dish.id}>
           <button className="dish-name" data-id={dish.id} onClick={showDishItems}>
             {dish.name}
           </button>
 
-          {dish.tags.map((tag) => (
-            <span>{tag.name}</span>
-          ))}
+          <div>{dish.lastDate ? moment(dish.lastDate.date).format('M/D') : null}</div>
+
+          <div>
+            {dish.tags.map((tag) => (
+              <span>{tag.name}</span>
+            ))}
+          </div>
 
           <button className="edit" onClick={editDish} data-id={dish.id} data-name={dish.name}>
             Edit
@@ -56,7 +70,7 @@ const StyledDishList = styled.div`
 
     li {
       display: grid;
-      grid-template-columns: 7fr 2fr 1fr;
+      grid-template-columns: 7fr 1fr 2fr 1fr;
       border: 1px solid #eaeaea;
 
       &:nth-child(even) {

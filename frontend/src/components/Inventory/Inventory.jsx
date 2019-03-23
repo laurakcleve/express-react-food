@@ -34,13 +34,13 @@ class Inventory extends Component {
           break;
         case 'expiration':
           if (order === 'asc') {
-            if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) return -1;
-            else if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) return 1;
-            output = 0;
+            if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) output = -1;
+            else if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) output = 1;
+            else output = 0;
           } else if (order === 'desc') {
-            if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) return -1;
-            else if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) return 1;
-            output = 0;
+            if (moment(a.expiration).valueOf() > moment(b.expiration).valueOf()) output = -1;
+            else if (moment(a.expiration).valueOf() < moment(b.expiration).valueOf()) output = 1;
+            else output = 0;
           }
           break;
         default:

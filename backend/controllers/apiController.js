@@ -69,3 +69,17 @@ exports.getDishTags = (req, res) => {
     .then((dishTags) => res.json(dishTags))
     .catch((error) => res.status(500).json({ error }));
 };
+
+exports.saveHistoryDate = (req, res) => {
+  queries
+    .saveHistoryDate(req.body)
+    .then((historyDate) => res.json(historyDate))
+    .catch((error) => res.status(500).json({ error }));
+};
+
+exports.deleteHistoryDate = (req, res) => {
+  queries
+    .deleteHistoryDate(req.body)
+    .then((historyDate) => res.json(historyDate))
+    .catch((error) => res.status(500).json({ error }));
+};

@@ -261,16 +261,31 @@ const getDishTags = (id) =>
     .where('dish.id', id);
 
 //
+//   GET DISH HISTORY
+//----------------------------------------------------------------------------------
+const getDishHistory = (id) =>
+  db('dish_history')
+    .select('dish_history.id', 'dish_history.date')
+    .innerJoin('dish', 'dish.id', 'dish_history.dish_id')
+    .where('dish.id', id)
+    .orderBy('dish_history.date', 'desc');
+
+//
 //   GET DISH
 //----------------------------------------------------------------------------------
 const getDish = (id) =>
-  Promise.all([getNakedDish(id), getDishItems(id), getDishTags(id)]).then(
-    (dish) => ({
-      ...dish[0],
-      itemSets: dish[1],
-      tags: dish[2] || [],
-    })
-  );
+  Promise.all([
+    getNakedDish(id),
+    getDishItems(id),
+    getDishTags(id),
+    getDishHistory(id),
+  ]).then((dish) => ({
+    ...dish[0],
+    itemSets: dish[1],
+    tags: dish[2] || [],
+    history: dish[3] || [],
+    lastDate: dish[3][0] || '',
+  }));
 
 //
 //   GET DISHES
@@ -375,6 +390,22 @@ const editDish = (data) =>
       ),
   ]);
 
+//
+//   SAVE HISTORY DATE
+//----------------------------------------------------------------------------------
+const saveHistoryDate = (data) =>
+  db('dish_history')
+    .insert({ dish_id: data.dishID, date: data.date })
+    .returning('id');
+
+//
+//   SAVE HISTORY DATE
+//----------------------------------------------------------------------------------
+const deleteHistoryDate = (data) =>
+  db('dish_history')
+    .del()
+    .where('id', data.id);
+
 module.exports = {
   getItems,
   getInventory,
@@ -386,4 +417,6 @@ module.exports = {
   getDishes,
   saveDish,
   editDish,
+  saveHistoryDate,
+  deleteHistoryDate,
 };
