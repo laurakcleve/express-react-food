@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import PropTypes from 'prop-types';
 
 import DishForm from './DishForm';
 
@@ -28,14 +29,22 @@ class AddDish extends Component {
   }
 
   render() {
-    const { items, dishTags, save } = this.props;
+    const { items, dishTags, save, fetchData } = this.props;
 
     return (
       <StyledAddDish>
         <button className="add-dish" onClick={this.handleOpen}>
           +
         </button>
-        {this.state.open && <DishForm items={items} dishTags={dishTags} cancel={this.cancel} save={save} />}
+        {this.state.open && (
+          <DishForm
+            items={items}
+            dishTags={dishTags}
+            cancel={this.cancel}
+            apiPath="/api/dishes/savedish"
+            fetchData={fetchData}
+          />
+        )}
       </StyledAddDish>
     );
   }
@@ -52,7 +61,7 @@ const StyledAddDish = styled.div`
     font-weight: bold;
     text-transform: uppercase; */
 
-    /* &.add-dish {
+  /* &.add-dish {
       display: block;
       background-color: #bba8d6;
       border: none;
@@ -89,11 +98,32 @@ const StyledAddDish = styled.div`
       color: #fff;
       letter-spacing: 1px;
     } */
-  }
+  /* } */
 
   /* form {
     margin-top: 20px;
   } */
 `;
+
+AddDish.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+      category_id: PropTypes.number,
+      default_location_id: PropTypes.number,
+      default_shelflife: PropTypes.number,
+    })
+  ).isRequired,
+  dishTags: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+
+  save: PropTypes.func.isRequired,
+  fetchData: PropTypes.func.isRequired,
+};
 
 export default AddDish;

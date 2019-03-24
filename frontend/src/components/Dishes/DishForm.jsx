@@ -1,6 +1,9 @@
+/* globals fetch */
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import PropTypes from 'prop-types';
 
+import TagInput from './TagInput';
 import ItemSet from './ItemSet';
 
 class DishForm extends Component {
@@ -10,9 +13,13 @@ class DishForm extends Component {
     const { existingName, existingTags, existingItemSets } = this.props;
 
     this.state = {
-      name: existingName || '',
-      tags: existingTags || [],
-      itemSets: existingItemSets || [],
+      name: existingName,
+      tags: [...existingTags],
+      itemSets: existingItemSets.map((itemSet) => ({
+        id: itemSet.id,
+        optional: itemSet.optional,
+        items: itemSet.items.map((item) => ({ id: item.id, name: item.name })),
+      })),
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -26,14 +33,21 @@ class DishForm extends Component {
     this.handleRemoveItemSubstitute = this.handleRemoveItemSubstitute.bind(this);
     this.handleCancel = this.handleCancel.bind(this);
     this.handleSave = this.handleSave.bind(this);
+    this.resetForm = this.resetForm.bind(this);
   }
 
+  //
+  //  HANDLE CHANGE
+  //----------------------------------------------------------------------------------
   handleChange(event) {
     const { value, name, type } = event.target;
     const val = type === 'number' ? parseFloat(value) || '' : value;
     this.setState({ [name]: val });
   }
 
+  //
+  //  ADD TAG
+  //----------------------------------------------------------------------------------
   addTag(event) {
     event.preventDefault();
     const { tags } = this.state;
@@ -41,6 +55,9 @@ class DishForm extends Component {
     this.setState({ tags });
   }
 
+  //
+  //  REMOVE TAG
+  //----------------------------------------------------------------------------------
   removeTag(event) {
     event.preventDefault();
     const { tags } = this.state;
@@ -49,6 +66,9 @@ class DishForm extends Component {
     this.setState({ tags });
   }
 
+  //
+  //  HANDLE TAG CHANGE
+  //----------------------------------------------------------------------------------
   handleTagChange(event) {
     const { value } = event.target;
     const { index } = event.target.dataset;
@@ -57,6 +77,9 @@ class DishForm extends Component {
     this.setState({ tags });
   }
 
+  //
+  //  ADD ITEM SET
+  //----------------------------------------------------------------------------------
   addItemSet(event) {
     event.preventDefault();
     const { itemSets } = this.state;
@@ -73,6 +96,9 @@ class DishForm extends Component {
     this.setState({ itemSets });
   }
 
+  //
+  //  ADD ITEM SET ITEM
+  //----------------------------------------------------------------------------------
   addItemSetItem(event) {
     event.preventDefault();
     const { itemSetIndex } = event.target.dataset;
@@ -86,6 +112,9 @@ class DishForm extends Component {
     this.setState({ itemSets });
   }
 
+  //
+  //  HANDLE ITEM NAME CHANGE
+  //----------------------------------------------------------------------------------
   handleItemNameChange(event) {
     const { value } = event.target;
     const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
@@ -96,6 +125,9 @@ class DishForm extends Component {
     this.setState({ itemSets });
   }
 
+  //
+  //  HANDLE ITEM OPTIONAL CHANGE
+  //----------------------------------------------------------------------------------
   handleItemOptionalChange(event) {
     const { itemSetIndex } = event.target.dataset;
     const { itemSets } = this.state;
@@ -105,6 +137,9 @@ class DishForm extends Component {
     this.setState({ itemSets });
   }
 
+  //
+  //  HANDLE REMOVE ITEM SUBSTITUTE
+  //----------------------------------------------------------------------------------
   handleRemoveItemSubstitute(event) {
     event.preventDefault();
     const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
@@ -119,52 +154,73 @@ class DishForm extends Component {
     this.setState({ itemSets });
   }
 
+  //
+  //  HANDLE CANCEL
+  //----------------------------------------------------------------------------------
   handleCancel(event) {
     event.preventDefault();
     this.setState = { name: '', tags: [], itemSets: [] };
     this.props.cancel();
   }
 
+  //
+  //  HANDLE SAVE
+  //----------------------------------------------------------------------------------
   handleSave(event) {
     event.preventDefault();
-    this.props.save(this.state);
-    this.setState = { name: '', tags: [], itemSets: [] };
+    // this.props.save(this.state);
+    // this.setState = { name: '', tags: [], itemSets: [] };
+
+    const { items, apiPath, fetchData } = this.props;
+    const saveData = this.state;
+    saveData.items = items;
+
+    fetch(apiPath, {
+      method: 'POST',
+      body: JSON.stringify(saveData),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) => {
+      if (res.ok) {
+        fetchData();
+        this.resetForm();
+      }
+    });
   }
 
+  //
+  //  RESET FORM
+  //----------------------------------------------------------------------------------
+  resetForm() {
+    this.setState({ name: '', tags: [], itemSets: [] });
+  }
+
+  //
+  //  RENDER
+  //----------------------------------------------------------------------------------
   render() {
     const { name, tags, itemSets } = this.state;
-    const { items, dishTags, existingName } = this.props;
+    const { items, dishTags } = this.props;
     return (
       <StyledDishForm>
         <label htmlFor="name">
           <h4>Name</h4>
-          <input type="text" className="name" name="name" value={name} onChange={this.handleChange} />
+          <input
+            type="text"
+            className="name"
+            name="name"
+            value={name}
+            onChange={this.handleChange}
+          />
         </label>
 
         <h4>Tags</h4>
-        {tags.map((tag, index) => (
-          <React.Fragment>
-            <input
-              type="text"
-              name={`tag${index}`}
-              value={tag}
-              data-index={index}
-              onChange={this.handleTagChange}
-              list={`tag${index}List`}
-            />
-
-            <datalist id={`tag${index}List`}>
-              {dishTags.map((dishTag) => (
-                <option key={dishTag.id}>{dishTag.name}</option>
-              ))}
-            </datalist>
-
-            <button onClick={this.removeTag} data-index={index}>
-              &mdash;
-            </button>
-          </React.Fragment>
-        ))}
-        <button onClick={this.addTag}>+</button>
+        <TagInput
+          tags={tags}
+          dishTags={dishTags}
+          handleTagChange={this.handleTagChange}
+          removeTag={this.removeTag}
+          addTag={this.addTag}
+        />
 
         <h4>Items</h4>
         {itemSets.map((itemSet, index) => (
@@ -206,4 +262,46 @@ const StyledDishForm = styled.form`
     text-transform: uppercase;
   }
 `;
+
+DishForm.defaultProps = {
+  existingName: '',
+  existingTags: [],
+  existingItemSets: [],
+};
+
+DishForm.propTypes = {
+  existingName: PropTypes.string,
+  existingTags: PropTypes.arrayOf(PropTypes.string),
+  existingItemSets: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      optional: PropTypes.string,
+      items: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.number.isRequired,
+          name: PropTypes.string.isRequired,
+        })
+      ),
+    })
+  ),
+
+  cancel: PropTypes.func.isRequired,
+
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+      category_id: PropTypes.number,
+      default_location_id: PropTypes.number,
+      default_shelflife: PropTypes.number,
+    })
+  ).isRequired,
+  dishTags: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+};
+
 export default DishForm;

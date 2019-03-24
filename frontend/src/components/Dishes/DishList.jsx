@@ -34,15 +34,22 @@ const DishList = ({
             {dish.name}
           </button>
 
-          <div>{dish.lastDate ? moment(dish.lastDate.date).format('M/D') : null}</div>
+          <div>
+            {dish.lastDate ? moment(dish.lastDate.date).format('M/D') : null}
+          </div>
 
           <div>
             {dish.tags.map((tag) => (
-              <span>{tag.name}</span>
+              <span key={tag.id}>{tag.name}</span>
             ))}
           </div>
 
-          <button className="edit" onClick={editDish} data-id={dish.id} data-name={dish.name}>
+          <button
+            className="edit"
+            onClick={editDish}
+            data-id={dish.id}
+            data-name={dish.name}
+          >
             Edit
           </button>
 

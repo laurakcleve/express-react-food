@@ -45,6 +45,8 @@ const itemLocationCheck = (itemLocations, itemLocationName) => {
 //   DISH TAG CHECK
 //----------------------------------------------------------------------------------
 const dishTagCheck = (dishTags, dishTagName) => {
+  console.log('dishTags', dishTags);
+  console.log('dishTagName', dishTagName);
   const dishTagNames = dishTags.map((dishTag) => dishTag.name);
 
   if (dishTagNames.includes(dishTagName)) {

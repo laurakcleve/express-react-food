@@ -22,32 +22,30 @@ const ItemSet = ({
       />
     </label>
     {itemSet.items.map((itemSetItem, itemIndex) => (
-      <React.Fragment>
-        <div className="substitute" key={itemSetItem.id}>
-          <input
-            type="text"
-            value={itemSetItem.name}
-            data-item-set-index={itemSetIndex}
-            data-item-set-item-index={itemIndex}
-            onChange={handleItemNameChange}
-            list={`${itemSetItem.id}List`}
-          />
-          <datalist id={`${itemSetItem.id}List`}>
-            {items.map((item) => (
-              <option key={item.id}>{item.name}</option>
-            ))}
-          </datalist>
+      <div className="substitute" key={itemSetItem.id}>
+        <input
+          type="text"
+          value={itemSetItem.name}
+          data-item-set-index={itemSetIndex}
+          data-item-set-item-index={itemIndex}
+          onChange={handleItemNameChange}
+          list={`${itemSetItem.id}List`}
+        />
+        <datalist id={`${itemSetItem.id}List`}>
+          {items.map((item) => (
+            <option key={item.id}>{item.name}</option>
+          ))}
+        </datalist>
 
-          <button
-            className="remove-substitute"
-            data-item-set-index={itemSetIndex}
-            data-item-set-item-index={itemIndex}
-            onClick={handleRemoveItemSubstitute}
-          >
-            &mdash;
-          </button>
-        </div>
-      </React.Fragment>
+        <button
+          className="remove-substitute"
+          data-item-set-index={itemSetIndex}
+          data-item-set-item-index={itemIndex}
+          onClick={handleRemoveItemSubstitute}
+        >
+          &mdash;
+        </button>
+      </div>
     ))}
 
     <button className="add-substitute" data-item-set-index={itemSetIndex} onClick={addItemSetItem}>

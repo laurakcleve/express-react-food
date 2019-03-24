@@ -25,12 +25,24 @@ class Dishes extends Component {
           break;
         case 'lastDate':
           if (order === 'asc') {
-            if (moment(a.lastDate.date).valueOf() < moment(b.lastDate.date).valueOf()) output = -1;
-            else if (moment(a.lastDate.date).valueOf() > moment(b.lastDate.date).valueOf()) output = 1;
+            if (
+              moment(a.lastDate.date).valueOf() < moment(b.lastDate.date).valueOf()
+            )
+              output = -1;
+            else if (
+              moment(a.lastDate.date).valueOf() > moment(b.lastDate.date).valueOf()
+            )
+              output = 1;
             else output = 0;
           } else if (order === 'desc') {
-            if (moment(a.lastDate.date).valueOf() > moment(b.lastDate.date).valueOf()) output = -1;
-            else if (moment(a.lastDate.date).valueOf() < moment(b.lastDate.date).valueOf()) output = 1;
+            if (
+              moment(a.lastDate.date).valueOf() > moment(b.lastDate.date).valueOf()
+            )
+              output = -1;
+            else if (
+              moment(a.lastDate.date).valueOf() < moment(b.lastDate.date).valueOf()
+            )
+              output = 1;
             else output = 0;
           }
           break;
@@ -40,7 +52,9 @@ class Dishes extends Component {
       return output;
     };
 
-    const sortedDishes = [].concat(dishes.sort((a, b) => sortComparison(a, b, sortBy, sortOrder)));
+    const sortedDishes = [].concat(
+      dishes.sort((a, b) => sortComparison(a, b, sortBy, sortOrder))
+    );
 
     return sortedDishes;
   }
@@ -49,13 +63,10 @@ class Dishes extends Component {
     super(props);
     this.state = { loading: true };
 
+    this.fetchData = this.fetchData.bind(this);
     this.showDishItems = this.showDishItems.bind(this);
     this.setSelectedDish = this.setSelectedDish.bind(this);
-    this.addItemSet = this.addItemSet.bind(this);
-    this.addItemSetItem = this.addItemSetItem.bind(this);
-    this.saveDish = this.saveDish.bind(this);
     this.editDish = this.editDish.bind(this);
-    this.handleChange = this.handleChange.bind(this);
     this.saveEditDish = this.saveEditDish.bind(this);
     this.cancelEditDish = this.cancelEditDish.bind(this);
     this.saveNewDish = this.saveNewDish.bind(this);
@@ -87,7 +98,12 @@ class Dishes extends Component {
       fetch('/api/dishes')
         .then((res) => res.json())
         .then((dishes) => {
-          const { filteredDishTags = [], selectedDish, sortBy = 'name', sortOrder = 'asc' } = this.state;
+          const {
+            filteredDishTags = [],
+            selectedDish,
+            sortBy = 'name',
+            sortOrder = 'asc',
+          } = this.state;
 
           // Keep a copy of unfiltered dishes
           const allDishes = dishes;
@@ -141,84 +157,23 @@ class Dishes extends Component {
   }
 
   //
-  //  ADD ITEM SET
+  //  SAVE NEW DISH
   //----------------------------------------------------------------------------------
-  addItemSet() {
-    const { newDishItemSets } = this.state;
-    newDishItemSets.push({ items: [{ name: '', id: Date.now() }], optional: '', id: Date.now() });
-    this.setState({ newDishItemSets });
-  }
+  saveNewDish(data) {
+    const { items } = this.state;
+    const saveData = data;
 
-  //
-  //  ADD ITEM SET ITEM
-  //----------------------------------------------------------------------------------
-  addItemSetItem(event) {
-    event.preventDefault();
-    const { itemSetIndex } = event.target.dataset;
-    const { newDishItemSets } = this.state;
-    newDishItemSets[itemSetIndex].items.push({ name: '', id: Date.now() });
-    this.setState({ newDishItemSets });
-  }
+    saveData.items = items;
 
-  //
-  //  HANDLE ITEM NAME CHANGE
-  //----------------------------------------------------------------------------------
-  handleItemNameChange(event) {
-    const { value } = event.target;
-    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
-    const { newDishItemSets } = this.state;
-    newDishItemSets[itemSetIndex].items[itemSetItemIndex].name = value;
-    this.setState({ newDishItemSets });
-  }
-
-  //
-  //  HANDLE ITEM OPTIONAL CHANGE
-  //----------------------------------------------------------------------------------
-  handleItemOptionalChange(event) {
-    const { itemSetIndex } = event.target.dataset;
-    const { newDishItemSets } = this.state;
-    newDishItemSets[itemSetIndex].optional = !newDishItemSets[itemSetIndex].optional;
-    this.setState({ newDishItemSets });
-  }
-
-  //
-  //  HANDLE REMOVE SUBSTITUTE
-  //----------------------------------------------------------------------------------
-  handleRemoveSubstitute(event) {
-    event.preventDefault();
-    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
-    const { newDishItemSets } = this.state;
-
-    if (newDishItemSets[itemSetIndex].items.length === 1) {
-      newDishItemSets.splice(itemSetIndex, 1);
-    } else {
-      newDishItemSets[itemSetIndex].items.splice(itemSetItemIndex, 1);
-    }
-
-    this.setState({ newDishItemSets });
-  }
-
-  //
-  //  SAVE DISH
-  //----------------------------------------------------------------------------------
-  saveDish(event) {
-    event.preventDefault();
     fetch('/api/dishes/savedish', {
       method: 'POST',
-      body: JSON.stringify(this.state),
+      body: JSON.stringify(saveData),
       headers: { 'Content-Type': 'application/json' },
-    }).then((res) =>
-      res.json().then((resJSON) => {
-        console.log(resJSON);
-        if (res.ok) {
-          this.fetchData();
-          this.setState({
-            newDishName: '',
-            newDishItemSets: [],
-          });
-        }
-      })
-    );
+    }).then((res) => {
+      if (res.ok) {
+        this.fetchData();
+      }
+    });
   }
 
   //
@@ -238,123 +193,12 @@ class Dishes extends Component {
 
     const editDishTags = dishForEdit.tags.map((tag) => tag.name);
 
-    this.setState({ editDishName: name, editDishID: parseInt(id, 10), editDishItemSets, editDishTags });
-  }
-
-  //
-  //  HANDLE CHANGE
-  //----------------------------------------------------------------------------------
-  handleChange(event) {
-    const { value, name, type } = event.target;
-    const val = type === 'number' ? parseFloat(value) || '' : value;
-    this.setState({ [name]: val });
-  }
-
-  //
-  //  HANDLE EDIT DISH ADD TAG
-  //----------------------------------------------------------------------------------
-  handleEditDishAddTag(event) {
-    event.preventDefault();
-    const { editDishTags } = this.state;
-    console.log(editDishTags);
-    editDishTags.push('');
-    this.setState({ editDishTags });
-  }
-
-  //
-  //  HANDLE EDIT DISH TAG INPUT
-  //----------------------------------------------------------------------------------
-  handleEditDishTagInput(event) {
-    const { value } = event.target;
-    const { index } = event.target.dataset;
-    const { editDishTags } = this.state;
-
-    editDishTags[index] = value;
-    this.setState({ editDishTags });
-  }
-
-  //
-  //  HANDLE EDIT DISH REMOVE TAG
-  //----------------------------------------------------------------------------------
-  handleEditDishRemoveTag(event) {
-    event.preventDefault();
-    const { index } = event.target.dataset;
-    const { editDishTags } = this.state;
-
-    editDishTags.splice(index, 1);
-    this.setState({ editDishTags });
-  }
-
-  //
-  //  HANDLE EDIT ITEM NAME CHANGE
-  //----------------------------------------------------------------------------------
-  handleEditItemNameChange(event) {
-    const { value } = event.target;
-    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
-    const { editDishItemSets } = this.state;
-
-    editDishItemSets[itemSetIndex].items[itemSetItemIndex].name = value;
-
-    this.setState({ editDishItemSets });
-  }
-
-  //
-  //  ADD DISH ADD TAG
-  //----------------------------------------------------------------------------------
-  addDishAddTag(event) {
-    event.preventDefault();
-    const { newDishTags } = this.state;
-    newDishTags.push('');
-    this.setState(newDishTags);
-  }
-
-  //
-  //  HANDLE EDIT ITEM OPTIONAL CHANGE
-  //----------------------------------------------------------------------------------
-  handleEditItemOptionalChange(event) {
-    const { itemSetIndex } = event.target.dataset;
-    const { editDishItemSets } = this.state;
-    editDishItemSets[itemSetIndex].optional = !editDishItemSets[itemSetIndex].optional;
-    this.setState({ editDishItemSets });
-  }
-
-  //
-  //  HANDLE EDIT ITEM REMOVE
-  //----------------------------------------------------------------------------------
-  handleEditItemRemove(event) {
-    event.preventDefault();
-    const { itemSetIndex, itemSetItemIndex } = event.target.dataset;
-    const { editDishItemSets } = this.state;
-
-    if (editDishItemSets[itemSetIndex].items.length === 1) {
-      editDishItemSets.splice(itemSetIndex, 1);
-    } else {
-      editDishItemSets[itemSetIndex].items.splice(itemSetItemIndex, 1);
-    }
-
-    this.setState({ editDishItemSets });
-  }
-
-  //
-  //  HANDLE EDIT ITEM ADD
-  //----------------------------------------------------------------------------------
-  handleEditItemAdd(event) {
-    event.preventDefault();
-    const { editDishItemSets } = this.state;
-
-    editDishItemSets.push({ items: [{ name: '', id: Date.now() }], optional: '', id: Date.now() });
-    this.setState({ editDishItemSets });
-  }
-
-  //
-  //  ADD EDIT ITEM SET ITEM
-  //----------------------------------------------------------------------------------
-  addEditItemSetItem(event) {
-    event.preventDefault();
-    const { itemSetIndex } = event.target.dataset;
-    const { editDishItemSets } = this.state;
-    editDishItemSets[itemSetIndex].items.push({ name: '', id: Date.now() });
-    this.setState({ editDishItemSets });
+    this.setState({
+      editDishName: name,
+      editDishID: parseInt(id, 10),
+      editDishItemSets,
+      editDishTags,
+    });
   }
 
   //
@@ -378,7 +222,7 @@ class Dishes extends Component {
         this.setState({
           editDishName: '',
           editDishID: '',
-          editDishItems: [],
+          editDishItemSets: [],
           editDishTags: [],
           selectedDish: null,
         });
@@ -390,23 +234,11 @@ class Dishes extends Component {
   //  CANCEL EDIT DISH
   //----------------------------------------------------------------------------------
   cancelEditDish() {
-    this.setState({ editDishID: '', editDishname: '', editDishItemSets: [], editDishTags: [] });
-  }
-
-  saveNewDish(data) {
-    const { items } = this.state;
-    const saveData = data;
-
-    saveData.items = items;
-
-    fetch('/api/dishes/savedish', {
-      method: 'POST',
-      body: JSON.stringify(saveData),
-      headers: { 'Content-Type': 'application/json' },
-    }).then((res) => {
-      if (res.ok) {
-        this.fetchData();
-      }
+    this.setState({
+      editDishID: '',
+      editDishName: '',
+      editDishItemSets: [],
+      editDishTags: [],
     });
   }
 
@@ -450,7 +282,6 @@ class Dishes extends Component {
   //  SAVE HISTORY DATE
   //----------------------------------------------------------------------------------
   saveHistoryDate(data) {
-    console.log('data', data);
     fetch('/api/dishes/savehistorydate', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -480,7 +311,7 @@ class Dishes extends Component {
   }
 
   //
-  //  DELETE HISTORY DATE
+  //  HANDLE SORT
   //----------------------------------------------------------------------------------
   handleSort(event) {
     const { category } = event.target.dataset;
@@ -520,7 +351,12 @@ class Dishes extends Component {
     return (
       <StyledDishes>
         <h1>Dishes</h1>
-        <AddDish items={items} dishTags={dishTags} save={this.saveNewDish} />
+        <AddDish
+          items={items}
+          dishTags={dishTags}
+          save={this.saveNewDish}
+          fetchData={this.fetchData}
+        />
         <div className="container">
           <div className="tags">
             <h4>Tags</h4>
@@ -535,7 +371,7 @@ class Dishes extends Component {
             </label>
             <br />
             {dishTags.map((tag) => (
-              <React.Fragment>
+              <React.Fragment key={tag.id}>
                 <label htmlFor={`tag${tag.id}`}>
                   <input
                     type="checkbox"
@@ -588,6 +424,10 @@ const StyledDishes = styled.div`
   .container {
     display: grid;
     grid-template-columns: 1fr 4fr 2fr;
+  }
+
+  h1 {
+    font-size: 24px;
   }
 `;
 
