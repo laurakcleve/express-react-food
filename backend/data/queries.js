@@ -305,7 +305,7 @@ const saveDish = (data) =>
     .insert({ name: data.name })
     .returning('id')
     .then((dishIDs) =>
-      Promise.all(
+      Promise.all([
         data.itemSets.map((itemSet) =>
           db('item_set')
             .insert({
@@ -325,8 +325,23 @@ const saveDish = (data) =>
                 )
               )
             )
-        )
-      )
+        ),
+        db('dish_has_tag')
+          .del()
+          .where('dish_id', dishIDs[0])
+          .then(() =>
+            Promise.all(
+              data.tags.map((tag) =>
+                dishTagCheck(data.dishTags, tag).then((tagID) =>
+                  db('dish_has_tag').insert({
+                    dish_id: dishIDs[0],
+                    dish_tag_id: tagID,
+                  })
+                )
+              )
+            )
+          ),
+      ])
     );
 
 //
