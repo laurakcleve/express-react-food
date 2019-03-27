@@ -11,12 +11,23 @@ const GlobalStyles = createGlobalStyle`
 
   button {
     font-family: 'Heebo';
+    background-color: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px 10px;
     &:focus {
       outline: none;
     }
   }
 
-  input {
+  input[type="text"] {
+  width: 250px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #505050;
+  font-size: 14px;
     &:focus {
       outline: none;
     }

@@ -171,9 +171,13 @@ class DishForm extends Component {
     // this.props.save(this.state);
     // this.setState = { name: '', tags: [], itemSets: [] };
 
-    const { items, apiPath, fetchData } = this.props;
+    const { items, dishTags, editDishID, apiPath, fetchData } = this.props;
     const saveData = this.state;
     saveData.items = items;
+    saveData.dishTags = dishTags;
+    saveData.editDishID = editDishID;
+
+    console.log('saveData', saveData);
 
     fetch(apiPath, {
       method: 'POST',
@@ -202,66 +206,81 @@ class DishForm extends Component {
     const { items, dishTags } = this.props;
     return (
       <StyledDishForm>
-        <label htmlFor="name">
-          <h4>Name</h4>
-          <input
-            type="text"
-            className="name"
-            name="name"
-            value={name}
-            onChange={this.handleChange}
+        <Name>
+          <label htmlFor="name">
+            <h4>Name</h4>
+            <input
+              type="text"
+              className="name"
+              name="name"
+              value={name}
+              onChange={this.handleChange}
+            />
+          </label>
+        </Name>
+
+        <Tags>
+          <h4>Tags</h4>
+          <TagInput
+            tags={tags}
+            dishTags={dishTags}
+            handleTagChange={this.handleTagChange}
+            removeTag={this.removeTag}
+            addTag={this.addTag}
           />
-        </label>
+        </Tags>
 
-        <h4>Tags</h4>
-        <TagInput
-          tags={tags}
-          dishTags={dishTags}
-          handleTagChange={this.handleTagChange}
-          removeTag={this.removeTag}
-          addTag={this.addTag}
-        />
+        <Items>
+          <h4>Items</h4>
+          {itemSets.map((itemSet, index) => (
+            <ItemSet
+              key={itemSet.id}
+              items={items}
+              itemSet={itemSet}
+              itemSetIndex={index}
+              handleItemNameChange={this.handleItemNameChange}
+              handleItemOptionalChange={this.handleItemOptionalChange}
+              addItemSetItem={this.addItemSetItem}
+              handleRemoveItemSubstitute={this.handleRemoveItemSubstitute}
+            />
+          ))}
+          <button onClick={this.addItemSet}>+</button>
+        </Items>
 
-        <h4>Items</h4>
-        {itemSets.map((itemSet, index) => (
-          <ItemSet
-            key={itemSet.id}
-            items={items}
-            itemSet={itemSet}
-            itemSetIndex={index}
-            handleItemNameChange={this.handleItemNameChange}
-            handleItemOptionalChange={this.handleItemOptionalChange}
-            addItemSetItem={this.addItemSetItem}
-            handleRemoveItemSubstitute={this.handleRemoveItemSubstitute}
-          />
-        ))}
-        <button onClick={this.addItemSet}>+</button>
-
-        <br />
-        <button onClick={this.handleCancel}>Cancel</button>
-        <button onClick={this.handleSave}>Save</button>
+        <CancelOrSave>
+          <button onClick={this.handleCancel}>Cancel</button>
+          <button onClick={this.handleSave}>Save</button>
+        </CancelOrSave>
       </StyledDishForm>
     );
   }
 }
 
 const StyledDishForm = styled.form`
-  h4 {
+  display: grid;
+  grid-template-columns:
+    300px auto
+    h4 {
     margin-bottom: 5px;
   }
-
-  input.name {
-    display: block;
-    width: 250px;
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #505050;
-    font-size: 11px;
-    text-transform: uppercase;
-  }
 `;
+
+const Name = styled.div`
+  display: inline-block;
+`;
+
+const Tags = styled.div`
+  display: inline-block;
+  margin-left: 50px;
+`;
+
+const Items = styled.div`
+  grid-column-start: 1;
+  grid-column-end: 3;
+  margin-bottom: 30px;
+`;
+
+const CancelOrSave = styled.div``;
 
 DishForm.defaultProps = {
   existingName: '',

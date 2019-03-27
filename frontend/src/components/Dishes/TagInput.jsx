@@ -1,9 +1,11 @@
 import React from 'react';
+import uniqid from 'uniqid';
+import styled from 'styled-components';
 
 const TagInput = ({ tags, dishTags, handleTagChange, removeTag, addTag }) => (
   <div>
     {tags.map((tag, index) => (
-      <React.Fragment>
+      <Tag>
         <input
           type="text"
           name={`tag${index}`}
@@ -19,14 +21,33 @@ const TagInput = ({ tags, dishTags, handleTagChange, removeTag, addTag }) => (
           ))}
         </datalist>
 
-        <button onClick={removeTag} data-index={index}>
+        <RemoveButton onClick={removeTag} data-index={index}>
           &mdash;
-        </button>
-      </React.Fragment>
+        </RemoveButton>
+      </Tag>
     ))}
 
-    <button onClick={addTag}> +</button>
+    <AddButton className="add" onClick={addTag}>
+      {' '}
+      +
+    </AddButton>
   </div>
 );
+
+const Tag = styled.div`
+  display: block;
+
+  input {
+    width: 200px;
+    margin: 3px 3px 3px 0;
+  }
+`;
+
+const AddButton = styled.button`
+  display: block;
+  margin-top: 10px;
+`;
+
+const RemoveButton = styled.button``;
 
 export default TagInput;

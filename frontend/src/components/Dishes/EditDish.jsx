@@ -5,6 +5,7 @@ import DishForm from './DishForm';
 const EditDish = ({
   items,
   dishTags,
+  editDishID,
   editDishName,
   editDishTags,
   editDishItemSets,
@@ -16,6 +17,7 @@ const EditDish = ({
     items={items}
     dishTags={dishTags}
     cancel={cancelEditDish}
+    editDishID={editDishID}
     existingName={editDishName}
     existingItemSets={editDishItemSets}
     existingTags={editDishTags}

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import moment from 'moment';
+import styled from 'styled-components';
 
 class DishDetails extends Component {
   constructor(props) {
@@ -31,39 +32,76 @@ class DishDetails extends Component {
     const { newDate } = this.state;
 
     return (
-      <div>
-        <h4>Items</h4>
-        <ul>
-          {selectedDish.itemSets.map((itemSet) => (
-            <li key={itemSet.id}>
-              {itemSet.items.map((item) => (
-                <span key={item.id}>{`${item.name}/`}</span>
-              ))}{' '}
-              {itemSet.optional && <span>(optional)</span>}
-            </li>
-          ))}
-        </ul>
+      <StyledDishDetails>
+        <Items>
+          <h4>Items</h4>
+          <ul>
+            {selectedDish.itemSets.map((itemSet) => (
+              <li key={itemSet.id}>
+                {itemSet.items.map((item, index) => (
+                  <span key={item.id}>
+                    {`${item.name} ${index === itemSet.items.length - 1 ? '' : '/'}`}
+                  </span>
+                ))}{' '}
+                {itemSet.optional && <span>(optional)</span>}
+              </li>
+            ))}
+          </ul>
+        </Items>
 
-        <h4>History</h4>
-        <form>
-          <input type="text" value={newDate} onChange={this.handleDateChange} />
-          <button type="submit" onClick={this.addDate}>
-            Add
-          </button>
-        </form>
-        <ul>
-          {selectedDish.history.map((date) => (
-            <React.Fragment key={date.id}>
-              <li>{moment(date.date).format('M/D/YY')}</li>
-              <button type="button" onClick={() => this.props.deleteHistoryDate(date.id)}>
-                X
-              </button>
-            </React.Fragment>
-          ))}
-        </ul>
-      </div>
+        <History>
+          <h4>History</h4>
+          <form>
+            <input type="text" value={newDate} onChange={this.handleDateChange} />
+            <button type="submit" onClick={this.addDate}>
+              Add
+            </button>
+          </form>
+          <ul>
+            {selectedDish.history.map((date) => (
+              <React.Fragment key={date.id}>
+                <li>
+                  <span>{moment(date.date).format('M/D/YY')}</span>
+                  <button
+                    type="button"
+                    onClick={() => this.props.deleteHistoryDate(date.id)}
+                  >
+                    X
+                  </button>
+                </li>
+              </React.Fragment>
+            ))}
+          </ul>
+        </History>
+      </StyledDishDetails>
     );
   }
 }
+
+const StyledDishDetails = styled.div`
+  grid-column: 1 / 5;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  padding: 0 30px 25px;
+`;
+
+const Items = styled.div`
+  font-size: 14px;
+`;
+
+const History = styled.div`
+  font-size: 14px;
+
+  input[type='text'] {
+    width: 50px;
+    height: 10px;
+    margin-right: 10px;
+  }
+
+  span {
+    font-size: 13px;
+    margin-right: 10px;
+  }
+`;
 
 export default DishDetails;

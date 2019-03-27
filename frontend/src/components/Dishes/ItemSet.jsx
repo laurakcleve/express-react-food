@@ -48,7 +48,11 @@ const ItemSet = ({
       </div>
     ))}
 
-    <button className="add-substitute" data-item-set-index={itemSetIndex} onClick={addItemSetItem}>
+    <button
+      className="add-substitute"
+      data-item-set-index={itemSetIndex}
+      onClick={addItemSetItem}
+    >
       Add substitute
     </button>
   </StyledItemSet>
@@ -57,6 +61,7 @@ const ItemSet = ({
 const StyledItemSet = styled.div`
   position: relative;
   width: 420px;
+  min-height: 50px;
   border-radius: 8px;
   margin-bottom: 10px;
   padding: 8px;
@@ -66,6 +71,7 @@ const StyledItemSet = styled.div`
 
   input[type='text'] {
     width: 200px;
+    margin-bottom: 5px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -75,6 +81,9 @@ const StyledItemSet = styled.div`
 
   button {
     &.add-substitute {
+      position: absolute;
+      right: 5px;
+      bottom: 5px;
       margin-top: 10px;
       padding: 5px 10px;
       background-color: #d9cee8;

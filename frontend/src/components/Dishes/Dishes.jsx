@@ -101,7 +101,7 @@ class Dishes extends Component {
           const {
             filteredDishTags = [],
             selectedDish,
-            sortBy = 'name',
+            sortBy = 'lastDate',
             sortOrder = 'asc',
           } = this.state;
 
@@ -125,12 +125,15 @@ class Dishes extends Component {
           // Sort filtered dishes
           const sortedDishes = Dishes.sortDishes(filteredDishes, sortBy, sortOrder);
 
-          this.setState({ dishes: sortedDishes, allDishes }, () => {
-            // Update selected dish if there is one
-            if (selectedDish) {
-              this.setSelectedDish(selectedDish.id);
+          this.setState(
+            { dishes: sortedDishes, allDishes, editDishID: null },
+            () => {
+              // Update selected dish if there is one
+              if (selectedDish) {
+                this.setSelectedDish(selectedDish.id);
+              }
             }
-          });
+          );
         }),
       fetch('/api/items')
         .then((res) => res.json())
@@ -400,16 +403,12 @@ class Dishes extends Component {
               cancelEditDish={this.cancelEditDish}
               saveEditDish={this.saveEditDish}
               handleSort={this.handleSort}
-            />
-          </div>
-
-          {selectedDish && (
-            <DishDetails
+              fetchData={this.fetchData}
               selectedDish={selectedDish}
               saveHistoryDate={this.saveHistoryDate}
               deleteHistoryDate={this.deleteHistoryDate}
             />
-          )}
+          </div>
         </div>
       </StyledDishes>
     );
@@ -423,7 +422,7 @@ const StyledDishes = styled.div`
 
   .container {
     display: grid;
-    grid-template-columns: 1fr 4fr 2fr;
+    grid-template-columns: 1fr 6fr;
   }
 
   h1 {
