@@ -9,6 +9,7 @@ import DishDetails from './DishDetails';
 const DishList = ({
   dishes,
   items,
+  inventoryItems,
   dishTags,
   editDishID,
   editDishName,
@@ -26,14 +27,14 @@ const DishList = ({
 }) => (
   <StyledDishList>
     <ul>
-      <li>
+      <ListHeader>
         <HeaderButton onClick={handleSort} data-category="name">
           Name
         </HeaderButton>
         <HeaderButton onClick={handleSort} data-category="lastDate">
           Last Date
         </HeaderButton>
-      </li>
+      </ListHeader>
       {dishes.map((dish) => (
         <DishListItem key={dish.id}>
           <button className="dish-name" data-id={dish.id} onClick={showDishItems}>
@@ -78,6 +79,7 @@ const DishList = ({
 
           {selectedDish && selectedDish.id === dish.id && (
             <DishDetails
+              inventoryItems={inventoryItems}
               selectedDish={selectedDish}
               saveHistoryDate={saveHistoryDate}
               deleteHistoryDate={deleteHistoryDate}
@@ -114,6 +116,11 @@ const StyledDishList = styled.div`
     margin-top: 8px;
     margin-right: 5px;
   }
+`;
+
+const ListHeader = styled.li`
+  display: grid;
+  grid-template-columns: 5fr 7fr;
 `;
 
 const HeaderButton = styled.button`

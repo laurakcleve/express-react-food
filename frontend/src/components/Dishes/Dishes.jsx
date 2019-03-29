@@ -135,16 +135,24 @@ class Dishes extends Component {
             }
           );
         }),
+
       fetch('/api/items')
         .then((res) => res.json())
         .then((items) => {
           this.setState({ items });
         }),
+
       fetch('/api/dishtags')
         .then((res) => res.json())
         .then((dishTags) => {
           const { filteredDishTags = [] } = this.state;
           this.setState({ dishTags, filteredDishTags });
+        }),
+
+      fetch('/api/inventory')
+        .then((res) => res.json())
+        .then((inventoryItems) => {
+          this.setState({ inventoryItems });
         }),
     ];
 
@@ -339,6 +347,7 @@ class Dishes extends Component {
     const {
       loading,
       items,
+      inventoryItems,
       dishes,
       dishTags,
       filteredDishTags,
@@ -393,6 +402,7 @@ class Dishes extends Component {
             <DishList
               dishes={dishes}
               items={items}
+              inventoryItems={inventoryItems}
               dishTags={dishTags}
               editDishID={editDishID}
               editDishName={editDishName}

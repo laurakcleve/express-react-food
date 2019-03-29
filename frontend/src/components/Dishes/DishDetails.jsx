@@ -9,6 +9,7 @@ class DishDetails extends Component {
 
     this.handleDateChange = this.handleDateChange.bind(this);
     this.addDate = this.addDate.bind(this);
+    this.isInInventory = this.isInInventory.bind(this);
   }
 
   handleDateChange(event) {
@@ -27,8 +28,16 @@ class DishDetails extends Component {
     this.props.saveHistoryDate(data);
   }
 
+  isInInventory(item) {
+    const { inventoryItems } = this.props;
+    return (
+      inventoryItems.filter((inventoryItem) => inventoryItem.name === item.name)
+        .length > 0
+    );
+  }
+
   render() {
-    const { selectedDish } = this.props;
+    const { inventoryItems, selectedDish } = this.props;
     const { newDate } = this.state;
 
     return (
@@ -39,9 +48,12 @@ class DishDetails extends Component {
             {selectedDish.itemSets.map((itemSet) => (
               <li key={itemSet.id}>
                 {itemSet.items.map((item, index) => (
-                  <span key={item.id}>
+                  <Item
+                    key={item.id}
+                    color={this.isInInventory(item) ? '' : '#a0a0a0'}
+                  >
                     {`${item.name} ${index === itemSet.items.length - 1 ? '' : '/'}`}
-                  </span>
+                  </Item>
                 ))}{' '}
                 {itemSet.optional && <span>(optional)</span>}
               </li>
@@ -87,6 +99,10 @@ const StyledDishDetails = styled.div`
 
 const Items = styled.div`
   font-size: 14px;
+`;
+
+const Item = styled.span`
+  color: ${(props) => props.color};
 `;
 
 const History = styled.div`
